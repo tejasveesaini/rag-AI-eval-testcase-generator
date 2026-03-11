@@ -4,6 +4,10 @@ Single responsibility: send a prompt to Gemini, parse the JSON response,
 and return a validated GeneratedTestSuite.
 
 Nothing in here touches Jira or the API layer.
+
+Two generation modes:
+  baseline  — generate_test_suite(story)
+  enriched  — generate_test_suite(story, context=package)
 """
 
 import json
@@ -14,7 +18,7 @@ from google.genai import types
 
 from src.config import get_settings
 from src.generation.prompt import build_prompt
-from src.models.schemas import GeneratedTestSuite, StoryContext
+from src.models.schemas import ContextPackage, GeneratedTestSuite, StoryContext
 
 
 # Model to use — confirmed available via API
@@ -49,12 +53,20 @@ def _parse_suite(raw_text: str, issue_key: str) -> GeneratedTestSuite:
     return GeneratedTestSuite.model_validate(data)
 
 
-def generate_test_suite(story: StoryContext, max_tests: int = 5) -> GeneratedTestSuite:
+def generate_test_suite(
+    story: StoryContext,
+    max_tests: int = 5,
+    context: ContextPackage | None = None,
+) -> GeneratedTestSuite:
     """Call Gemini synchronously and return a validated GeneratedTestSuite.
 
     Args:
-        story:     Normalized StoryContext — the only input Gemini should see.
+        story:     Normalized StoryContext — the primary source of truth.
         max_tests: Cap on the number of test cases to generate (default 5).
+        context:   Optional ContextPackage for enriched mode.
+                   When None, runs in baseline mode (story only).
+                   When provided, the prompt includes historical context with
+                   explicit authority rules (story always outranks context).
 
     Returns:
         A validated GeneratedTestSuite.
@@ -65,14 +77,14 @@ def generate_test_suite(story: StoryContext, max_tests: int = 5) -> GeneratedTes
     settings = get_settings()
     client = genai.Client(api_key=settings.gemini_api_key.get_secret_value())
 
-    prompt = build_prompt(story, max_tests=max_tests)
+    prompt = build_prompt(story, max_tests=max_tests, context=context)
 
     response = client.models.generate_content(
         model=_MODEL,
         contents=prompt,
         config=types.GenerateContentConfig(
-            temperature=0.2,        # low temperature = more deterministic output
-            max_output_tokens=8192,
+            temperature=0.2,         # low temperature = more deterministic output
+            max_output_tokens=16384, # thinking tokens consume ~8k; need 16k headroom
         ),
     )
 

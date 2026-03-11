@@ -1,0 +1,67 @@
+{
+  "story_key": "AIP-2",
+  "tests": [
+    {
+      "title": "Verify the security disclaimer appears when the chat window is opened",
+      "preconditions": [
+        "The chat feature is enabled for the customer"
+      ],
+      "steps": [
+        "Click on the chat icon to open the chat window",
+        "Observe the interface for a security disclaimer"
+      ],
+      "expected_result": "A brief security disclaimer is visible in the chat window.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify the disclaimer is placed in a highly visible location",
+      "preconditions": [
+        "The chat window is open"
+      ],
+      "steps": [
+        "Locate the security disclaimer message",
+        "Identify the location of the disclaimer relative to the text input box and the message list"
+      ],
+      "expected_result": "The message is highly visible and positioned either above the input box or as the first greeting.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify the disclaimer text contains required financial privacy warnings",
+      "preconditions": [
+        "The chat window is open and disclaimer is visible"
+      ],
+      "steps": [
+        "Read the content of the disclaimer message",
+        "Look for the specific phrases: 'credit card numbers', 'bank details', and 'financial data'"
+      ],
+      "expected_result": "The text warns the user not to share credit card numbers, bank details, or other financial data.",
+      "priority": "Medium",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify the disclaimer persists when the chat window is reopened",
+      "preconditions": [
+        "The user has access to the chat"
+      ],
+      "steps": [
+        "Open the chat window",
+        "Close the chat window",
+        "Open the chat window a second time"
+      ],
+      "expected_result": "The disclaimer message appears consistently every time the chat window is opened.",
+      "priority": "Medium",
+      "test_type": "Edge Case",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    }
+  ],
+  "notes": "The test for placement (AC-2) accepts either position specified in the story."
+}

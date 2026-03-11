@@ -1,0 +1,82 @@
+{
+  "story_key": "AIP-2",
+  "tests": [
+    {
+      "title": "Verify the security disclaimer is displayed upon opening the chat window",
+      "preconditions": [
+        "The user is on a page where the chat widget is available"
+      ],
+      "steps": [
+        "Click on the chat widget icon to open the chat window",
+        "Observe the initial content of the chat window"
+      ],
+      "expected_result": "A brief disclaimer warning against sharing credit card numbers, bank details, or financial data is visible.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify the chat disclaimer is visible and rendered correctly on Safari",
+      "preconditions": [
+        "The user is accessing the application using a Safari browser"
+      ],
+      "steps": [
+        "Open the chat window",
+        "Check the visibility of the security warning message above the input box or as the first message"
+      ],
+      "expected_result": "The security disclaimer is clearly visible and not obscured or missing in the Safari browser interface.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify the disclaimer is present before any user input is entered",
+      "preconditions": [
+        "The chat window is open and the input field is empty"
+      ],
+      "steps": [
+        "Observe the chat window interface before clicking into the text input box",
+        "Verify the presence of the security warning"
+      ],
+      "expected_result": "The warning message is displayed to the user before they have the opportunity to start typing.",
+      "priority": "Medium",
+      "test_type": "Edge Case",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify the disclaimer remains visible when forbidden characters are typed",
+      "preconditions": [
+        "The chat window is open and the disclaimer is visible"
+      ],
+      "steps": [
+        "Click inside the chat input box",
+        "Type a sequence of forbidden or special characters",
+        "Observe the security disclaimer area"
+      ],
+      "expected_result": "The disclaimer remains visible and its layout is not affected by the input of forbidden characters.",
+      "priority": "Medium",
+      "test_type": "Negative",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify the placement of the disclaimer message matches requirements",
+      "preconditions": [
+        "The chat window is open"
+      ],
+      "steps": [
+        "Locate the security disclaimer",
+        "Verify if it is placed either as the first automated greeting or immediately above the text input box"
+      ],
+      "expected_result": "The message is highly visible and correctly positioned according to the specified placement options.",
+      "priority": "Medium",
+      "test_type": "Functional",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-2"
+    }
+  ],
+  "notes": "Includes regression testing for Safari visibility (AIP-11) and negative testing regarding input interaction (AIP-10)."
+}
