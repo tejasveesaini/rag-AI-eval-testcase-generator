@@ -111,6 +111,61 @@ class GeneratedTestSuite(BaseModel):
     )
 
 
+# ── E. Historical context (retrieval layer) ───────────────────────────────────
+
+class ContextItemType(str, Enum):
+    """Category of a related issue brought into the context package."""
+    BUG = "bug"
+    TEST = "test"
+    STORY = "story"
+    OTHER = "other"
+
+
+class ContextItem(BaseModel):
+    """E. A single normalized related issue — the atom of historical context.
+
+    Deliberately small: only the fields that add signal to generation.
+    Raw Jira payloads must never reach the prompt — only ContextItems do.
+    """
+    key: str = Field(description="Jira issue key, e.g. AIP-10")
+    issue_type: str = Field(description="Jira issue type name, e.g. Bug, TestCase, Story")
+    category: ContextItemType = Field(description="Semantic category for prompt sectioning")
+    summary: str = Field(description="Issue summary — one line max")
+    short_text: str | None = Field(
+        default=None,
+        description="One or two meaningful lines: first sentence of description, AC snippet, or known failure note",
+    )
+    relevance_hint: str | None = Field(
+        default=None,
+        description="Why this item was included, e.g. 'linked defect', 'same label: AC-1', 'prior test'",
+    )
+
+
+class ContextPackage(BaseModel):
+    """F. The full retrieval-ready bundle passed into the prompt builder.
+
+    Separates concerns clearly so the prompt builder can render each section
+    independently and keep the total token budget in check.
+    """
+    story_key: str
+    linked_defects: list[ContextItem] = Field(
+        default_factory=list,
+        description="Bugs or issues linked directly to the story",
+    )
+    historical_tests: list[ContextItem] = Field(
+        default_factory=list,
+        description="Prior test cases from the same feature area",
+    )
+    related_stories: list[ContextItem] = Field(
+        default_factory=list,
+        description="Other stories in the same label / component set",
+    )
+    coverage_hints: list[str] = Field(
+        default_factory=list,
+        description="Free-text hints inferred from context, e.g. 'AC-1 already covered by AIP-4'",
+    )
+
+
 # ── API request / response ─────────────────────────────────────────────────────
 
 class GenerationRequest(BaseModel):

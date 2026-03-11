@@ -1,0 +1,26 @@
+{
+  "story_key": "AIP-2",
+  "linked_defects": [
+    {
+      "key": "AIP-10",
+      "issue_type": "Bug",
+      "category": "bug",
+      "summary": "Chat input allows forbidden characters",
+      "short_text": "Click inside the chat input.",
+      "relevance_hint": "linked issue"
+    },
+    {
+      "key": "AIP-11",
+      "issue_type": "Bug",
+      "category": "bug",
+      "summary": "Chat disclaimer not visible on Safari",
+      "short_text": "Open chat widget in Safari.",
+      "relevance_hint": "linked issue"
+    }
+  ],
+  "historical_tests": [],
+  "related_stories": [],
+  "coverage_hints": [
+    "Known linked defects for this story: AIP-10, AIP-11 — consider regression and negative tests"
+  ]
+}

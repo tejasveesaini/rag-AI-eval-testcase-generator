@@ -6,7 +6,9 @@ Keeping the prompt in its own module means:
 - the LLM never sees raw Jira structure
 """
 
-from src.models.schemas import CaseType, Priority, StoryContext
+from __future__ import annotations
+
+from src.models.schemas import CaseType, ContextItemType, ContextPackage, Priority, StoryContext
 
 
 # ── Exact enum values Gemini must use ─────────────────────────────────────────
@@ -52,9 +54,55 @@ HARD RULES — violating any of these makes the output unusable:
   R7. The output must be complete and valid JSON — do not truncate mid-string."""
 
 
+# ── Context block renderer ────────────────────────────────────────────────────
+
+def _context_block(package: ContextPackage) -> str:
+    """Render a ContextPackage into a compact, prompt-ready text block.
+
+    Design rules:
+    - Each item is one line: [TYPE] KEY: summary  (short_text if present)
+    - Sections are only included if they have content (no empty headers)
+    - Coverage hints are listed last — they directly guide the TASK section
+    - Total length is bounded: max 3 items per section keeps token budget low
+    """
+    lines: list[str] = []
+
+    def _item_line(item) -> str:
+        text = f"  [{item.issue_type}] {item.key}: {item.summary}"
+        if item.short_text:
+            text += f" — {item.short_text[:80]}"
+        return text
+
+    if package.linked_defects:
+        lines.append("Known Defects (linked to this story):")
+        for item in package.linked_defects[:3]:
+            lines.append(_item_line(item))
+
+    if package.historical_tests:
+        lines.append("Prior Test Cases (same feature area):")
+        for item in package.historical_tests[:3]:
+            lines.append(_item_line(item))
+
+    if package.related_stories:
+        lines.append("Related Stories:")
+        for item in package.related_stories[:3]:
+            lines.append(_item_line(item))
+
+    if package.coverage_hints:
+        lines.append("Coverage Hints (use these to avoid duplication and target gaps):")
+        for hint in package.coverage_hints:
+            lines.append(f"  → {hint}")
+
+    return "\n".join(lines)
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def build_prompt(story: StoryContext, max_tests: int = 5) -> str:
+def build_prompt(
+    story: StoryContext,
+    max_tests: int = 5,
+    context: ContextPackage | None = None,
+) -> str:
     """Return the full prompt string to send to Gemini.
 
     Design principles:
@@ -62,6 +110,7 @@ def build_prompt(story: StoryContext, max_tests: int = 5) -> str:
     - Exact enum values are injected from Python enums (single source of truth)
     - Hard rules are numbered so failures can be traced to a specific rule
     - Schema uses the real issue_key so Gemini has no excuse to get it wrong
+    - Optional ContextPackage is rendered as a compact HISTORICAL CONTEXT section
     """
     linked = ""
     if story.linked_issues:
@@ -80,6 +129,21 @@ def build_prompt(story: StoryContext, max_tests: int = 5) -> str:
         issue_key=story.issue_key,
     )
 
+    # Build the optional historical context section
+    context_section = ""
+    if context and (
+        context.linked_defects
+        or context.historical_tests
+        or context.related_stories
+        or context.coverage_hints
+    ):
+        context_section = f"""
+------------------------------------------------------------
+HISTORICAL CONTEXT (read-only — do not copy, only use for awareness)
+------------------------------------------------------------
+{_context_block(context)}
+"""
+
     return f"""You are a senior QA engineer generating test cases from a Jira story.
 Your output will be parsed by a machine. Any text outside the JSON object will cause a failure.
 
@@ -95,7 +159,7 @@ Description:
 Acceptance Criteria:
 {story.acceptance_criteria or "(not provided)"}
 {labels}{components}{linked}
-
+{context_section}
 ------------------------------------------------------------
 TASK
 ------------------------------------------------------------
@@ -106,6 +170,7 @@ Requirements:
   - Every test must be grounded in the story facts above — no invented behaviour
   - coverage_tag must reference the part of the story each test covers (e.g. AC-1, AC-2)
   - Steps must describe what a tester actually does, not what the system should do
+  - Use the Historical Context above to avoid duplicating known tests and to target gaps
 
 ------------------------------------------------------------
 {hard_rules}
