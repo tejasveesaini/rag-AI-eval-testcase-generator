@@ -1,0 +1,40 @@
+{
+    "story_key": "PROJ-1",
+    "tests": [
+        {
+            "title": "User can log in with valid credentials",
+            "preconditions": [
+                "User has a registered account",
+                "User is on the login page"
+            ],
+            "steps": [
+                "Enter a registered email address into the email field",
+                "Enter the correct password into the password field",
+                "Click the Login button"
+            ],
+            "expected_result": "User is redirected to the dashboard and sees their name in the header.",
+            "priority": "High",
+            "test_type": "Functional",
+            "coverage_tag": "AC-1",
+            "source_story": "PROJ-1"
+        },
+        {
+            "title": "User cannot log in with an incorrect password",
+            "preconditions": [
+                "User has a registered account",
+                "User is on the login page"
+            ],
+            "steps": [
+                "Enter a registered email address into the email field",
+                "Enter an incorrect password into the password field",
+                "Click the Login button"
+            ],
+            "expected_result": "An error message is displayed: 'Invalid email or password.'",
+            "priority": "High",
+            "test_type": "Negative",
+            "coverage_tag": "AC-1",
+            "source_story": "PROJ-1"
+        }
+    ],
+    "notes": "Sample reference output for PROJ-1. Used in offline evaluation."
+}

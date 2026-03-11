@@ -1,0 +1,9 @@
+{
+  "issue_key": "AIP-2",
+  "summary": "Customer Chat Warning Prompt",
+  "description": "As a customer using the chat,\nI want to see a clear warning message before I start typing,\nSo that I am reminded to keep my personal financial details private and secure.",
+  "acceptance_criteria": "A brief disclaimer (e.g., \"For your security, please do not share credit card numbers, bank details, or other financial data in this chat.\") appears when the chat window opens.\n\nThe message is highly visible and placed either just above the text input box or as the first automated greeting message.",
+  "labels": [],
+  "components": [],
+  "linked_issues": []
+}

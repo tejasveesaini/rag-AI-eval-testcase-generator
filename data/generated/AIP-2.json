@@ -1,0 +1,68 @@
+{
+  "story_key": "AIP-2",
+  "tests": [
+    {
+      "title": "Verify security disclaimer appears on chat initialization",
+      "preconditions": [
+        "User is on a page with the chat widget enabled",
+        "Chat session is not currently active"
+      ],
+      "steps": [
+        "Click on the chat icon to open the chat window.",
+        "Observe the initial content displayed in the chat interface."
+      ],
+      "expected_result": "A security disclaimer regarding financial data is visible immediately upon opening the window.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify disclaimer text content accuracy",
+      "preconditions": [
+        "Chat window is open"
+      ],
+      "steps": [
+        "Read the text of the displayed security warning message."
+      ],
+      "expected_result": "The message explicitly mentions not sharing 'credit card numbers', 'bank details', or 'financial data'.",
+      "priority": "Medium",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify disclaimer placement and visibility",
+      "preconditions": [
+        "Chat window is open"
+      ],
+      "steps": [
+        "Locate the text input box at the bottom of the chat window.",
+        "Identify the position of the security disclaimer."
+      ],
+      "expected_result": "The disclaimer is positioned either as the first message in the chat history or directly above the text input area.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-2"
+    },
+    {
+      "title": "Verify warning message is not hidden by input focus",
+      "preconditions": [
+        "Chat window is open",
+        "Security disclaimer is visible"
+      ],
+      "steps": [
+        "Click inside the chat text input box to focus the cursor.",
+        "Type 'Help' into the input box.",
+        "Verify the visibility of the security disclaimer."
+      ],
+      "expected_result": "The warning message does not disappear, get obscured, or become hidden when the user interacts with the input field.",
+      "priority": "High",
+      "test_type": "Negative",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-2"
+    }
+  ],
+  "notes": "The 'Negative' test ensures that user interaction (typing/focus) does not trigger a logic error that clears the mandatory security warning before the user has finished their session."
+}

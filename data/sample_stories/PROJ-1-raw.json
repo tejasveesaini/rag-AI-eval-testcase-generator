@@ -1,0 +1,54 @@
+{
+    "key": "PROJ-1",
+    "fields": {
+        "summary": "User can log in with valid credentials",
+        "description": {
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "As a registered user, I want to log in with my email and password so that I can access my dashboard."
+                        }
+                    ]
+                }
+            ]
+        },
+        "labels": [
+            "authentication",
+            "mvp"
+        ],
+        "components": [
+            {
+                "name": "Frontend"
+            },
+            {
+                "name": "Auth Service"
+            }
+        ],
+        "issuelinks": [
+            {
+                "inwardIssue": {
+                    "key": "PROJ-2",
+                    "fields": {
+                        "issuetype": {
+                            "name": "Sub-task"
+                        },
+                        "summary": "Implement JWT token validation"
+                    }
+                }
+            }
+        ],
+        "issuetype": {
+            "name": "Story"
+        },
+        "status": {
+            "name": "In Progress"
+        },
+        "customfield_10016": "Given a valid email and password, when I click Login, then I am redirected to the dashboard.",
+        "customfield_10014": null
+    }
+}

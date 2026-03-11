@@ -1,0 +1,21 @@
+{
+    "issue_key": "PROJ-1",
+    "summary": "User can log in with valid credentials",
+    "description": "As a registered user, I want to log in with my email and password so that I can access my dashboard.",
+    "acceptance_criteria": "Given a valid email and password, when I click Login, then I am redirected to the dashboard.",
+    "labels": [
+        "authentication",
+        "mvp"
+    ],
+    "components": [
+        "Frontend",
+        "Auth Service"
+    ],
+    "linked_issues": [
+        {
+            "key": "PROJ-2",
+            "issue_type": "Sub-task",
+            "summary": "Implement JWT token validation"
+        }
+    ]
+}

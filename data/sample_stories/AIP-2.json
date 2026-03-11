@@ -1,0 +1,185 @@
+{
+  "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+  "id": "10007",
+  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10007",
+  "key": "AIP-2",
+  "fields": {
+    "customfield_10016": null,
+    "summary": "Customer Chat Warning Prompt",
+    "issuetype": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10004",
+      "id": "10004",
+      "description": "A new feature of the product, which has yet to be developed.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10680?size=medium",
+      "name": "New Feature",
+      "subtask": false,
+      "avatarId": 10680,
+      "hierarchyLevel": 0
+    },
+    "components": [],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "As a",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " customer using the chat,"
+            }
+          ],
+          "attrs": {
+            "localId": "109e821c4f08"
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "I want",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " to see a clear warning message before I start typing,"
+            }
+          ],
+          "attrs": {
+            "localId": "29d6cf5f30d8"
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "So that",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " I am reminded to keep my personal financial details private and secure."
+            }
+          ],
+          "attrs": {
+            "localId": "59658fa0e07c"
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Acceptance Criteria:",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "localId": "9e5a398430f9"
+          }
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "attrs": {
+                "localId": "138eee9fcea5"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "A brief disclaimer (e.g., "
+                    },
+                    {
+                      "type": "text",
+                      "text": "\"For your security, please do not share credit card numbers, bank details, or other financial data in this chat.\"",
+                      "marks": [
+                        {
+                          "type": "em"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": ") appears when the chat window opens."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "b43dd038a858"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "attrs": {
+                "localId": "2f725fba46fe"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "The message is highly visible and placed either just above the text input box or as the first automated greeting message."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "e35496312a70"
+                  }
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "localId": "5b87e31393fd"
+          }
+        }
+      ]
+    },
+    "issuelinks": [],
+    "customfield_10014": null,
+    "status": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+      "description": "The work item is open and ready for the assignee to start work on it.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+      "name": "Open",
+      "id": "1",
+      "statusCategory": {
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      }
+    },
+    "labels": []
+  }
+}
