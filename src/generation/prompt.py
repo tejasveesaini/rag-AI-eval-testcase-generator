@@ -54,7 +54,10 @@ HARD RULES — violating any of these makes the output unusable:
   R4. Use ONLY these exact test_type values (case-sensitive): {types}
   R5. Every test must have source_story = "{issue_key}".
   R6. Every step must be a concrete, executable action — not "verify it works".
-  R7. The output must be complete and valid JSON — do not truncate mid-string."""
+  R7. The output must be complete and valid JSON — do not truncate mid-string.
+  R8. expected_result must state a directly observable outcome. Never write phrases like
+      "as specified", "per requirements", "according to spec", "as required", or
+      "correctly positioned according" — state the actual observable behaviour instead."""
 
 
 # ── Context authority rules (only rendered when context is present) ────────────
@@ -62,12 +65,18 @@ HARD RULES — violating any of these makes the output unusable:
 _CONTEXT_AUTHORITY_RULES = """\
 CONTEXT RULES — how to use the Historical Context section:
   C1. The current story (above) is the SOLE source of truth for requirements.
-      Historical context is supportive only — it does not add new requirements.
+      Historical context is supportive only — it does NOT add new requirements.
   C2. Do NOT copy existing test cases. Use them only to identify coverage gaps.
-  C3. If a known defect is listed, write a regression or negative test that targets
-      that failure area — but only if the current story scope supports it.
-  C4. Do NOT infer requirements from historical context that are absent from the story.
-  C5. If historical context conflicts with the current story, follow the current story."""
+  C3. If a known defect is listed, you MAY write one regression or negative test
+      for that failure area — BUT ONLY if the failure area is already in the
+      current story's scope. Do NOT treat the defect's platform, browser, or
+      character set as a new story requirement.
+  C4. PROHIBITED: any step or expected_result that references a platform name
+      (e.g. "Safari", "Chrome"), input type (e.g. "forbidden characters"), or
+      system detail that appears ONLY in the Historical Context and NOT in the
+      story description or acceptance criteria.
+  C5. Do NOT infer requirements from historical context that are absent from the story.
+  C6. If historical context conflicts with the current story, follow the current story."""
 
 
 # ── Context block renderer ────────────────────────────────────────────────────
@@ -207,7 +216,7 @@ TASK
 Generate between 3 and {max_tests} test cases for the story above.
 
 Requirements:
-  - Include AT LEAST ONE test with test_type = "Negative" or "Edge Case"
+  - Include AT LEAST ONE test with test_type = "Negative" (not just "Edge Case" — a true negative path)
   - Every test must be grounded in the STORY section — no invented behaviour
   - coverage_tag must reference the AC or feature area each test covers (e.g. AC-1, AC-2)
   - Steps must describe what a tester actually does, not what the system should do
