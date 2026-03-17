@@ -37,6 +37,17 @@ class Settings(BaseSettings):
     # ── App ──────────────────────────────────────────
     app_env: str = "development"
 
+    # ── Retrieval / ChromaDB ──────────────────────────
+    # Relative path (from project root) or absolute path to the persistent
+    # ChromaDB directory.  Override in .env as:  CHROMA_DIR=/abs/path/to/db
+    chroma_dir: str = "data/chroma"
+
+    # Gemini embedding model.
+    # gemini-embedding-001: 3072-dim, current stable model (text-embedding-004
+    # was retired from the v1beta API as of 2025).
+    # Override in .env as:  EMBEDDING_MODEL=models/gemini-embedding-2-preview
+    embedding_model: str = "models/gemini-embedding-001"
+
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"

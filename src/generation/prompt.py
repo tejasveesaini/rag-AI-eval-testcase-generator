@@ -125,8 +125,9 @@ def _context_block(package: ContextPackage) -> str:
 
 def build_prompt(
     story: StoryContext,
-    max_tests: int = 5,
+    max_tests: int = 10,
     context: ContextPackage | None = None,
+    excluded_titles: list[str] | None = None,
 ) -> str:
     """Return the full prompt string to send to Gemini.
 
@@ -193,6 +194,22 @@ HISTORICAL CONTEXT
     # ── Mode label (appears at top so it's easy to spot in logs) ─────────────
     mode_label = "MODE: enriched (story + historical context)" if has_context else "MODE: baseline (story only)"
 
+    # ── Existing / already-generated exclusion block ──────────────────────────
+    exclusion_section = ""
+    if excluded_titles:
+        titles_block = "\n".join(f"  - {t}" for t in excluded_titles)
+        exclusion_section = f"""\
+------------------------------------------------------------
+ALREADY COVERED TESTS — DO NOT REPEAT
+------------------------------------------------------------
+The following test case titles already exist on the story or were generated earlier.
+Do NOT generate any test that duplicates or closely paraphrases these titles.
+Focus on coverage areas and scenarios that are NOT yet covered by these tests.
+
+{titles_block}
+
+"""
+
     return f"""You are a senior QA engineer generating test cases from a Jira story.
 Your output will be parsed by a machine. Any text outside the JSON object will cause a failure.
 {mode_label}
@@ -210,14 +227,15 @@ Acceptance Criteria:
 {story.acceptance_criteria or "(not provided)"}
 {labels}{components}{linked}
 
-{context_block_section}------------------------------------------------------------
+{context_block_section}{exclusion_section}------------------------------------------------------------
 TASK
 ------------------------------------------------------------
-Generate between 3 and {max_tests} test cases for the story above.
+Generate exactly {max_tests} distinct test cases for the story above.
 
 Requirements:
   - Include AT LEAST ONE test with test_type = "Negative" (not just "Edge Case" — a true negative path)
   - Every test must be grounded in the STORY section — no invented behaviour
+  - Return the full requested count unless the story truly lacks enough distinct, grounded scenarios
   - coverage_tag must reference the AC or feature area each test covers (e.g. AC-1, AC-2)
   - Steps must describe what a tester actually does, not what the system should do
 {context_task_line}

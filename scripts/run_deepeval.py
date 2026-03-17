@@ -113,8 +113,10 @@ def _suite_to_output(suite: GeneratedTestSuite) -> str:
     """
     lines: list[str] = []
     for i, tc in enumerate(suite.tests, 1):
+        test_type = getattr(tc.test_type, "value", tc.test_type)
+        priority = getattr(tc.priority, "value", tc.priority)
         lines.append(f"Test {i}: {tc.title}")
-        lines.append(f"  Type: {tc.test_type} | Priority: {tc.priority}")
+        lines.append(f"  Type: {test_type} | Priority: {priority}")
         lines.append("  Steps:")
         for step in tc.steps:
             lines.append(f"    - {step}")

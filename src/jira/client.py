@@ -12,6 +12,7 @@ _FIELDS = ",".join([
     "labels",
     "components",
     "issuelinks",
+    "subtasks",
     "issuetype",
     "status",
     # custom field name for acceptance criteria varies per instance;

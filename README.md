@@ -239,6 +239,94 @@ pytest
 - [`scripts/push_tests.py`](/Users/tejasveesaini/rag-AI-eval-testcase-generator/scripts/push_tests.py) assumes the Jira TestCase subtask issue-type ID is `10012`.
 - [`scripts/push_bugs.py`](/Users/tejasveesaini/rag-AI-eval-testcase-generator/scripts/push_bugs.py) is hardcoded to `AIP`, `AIP-2`, and `AIP-4/AIP-5`; treat it as a demo helper, not a general-purpose script.
 
+## Learnings
+
+These are the real lessons learned while building this system — written in plain language so they are useful to anyone picking this project up.
+
+---
+
+### 1. JSON correctness is not the same as quality
+
+The first evaluation pass (schema checks, enum validation, field presence) told us the output was *structurally valid*. It did not tell us whether the test cases actually made sense for the story. A test that says "verify the system works correctly" can pass every schema check and still be useless.
+
+**Lesson:** structural validation is a floor, not a ceiling. You need content-aware checks (like AnswerRelevancy and Faithfulness) to know if the output is actually on-topic and grounded.
+
+---
+
+### 2. Context helps — but it also introduces new problems
+
+When we added historical context (linked bugs, prior test cases) to the prompt, the enriched mode generated more complete test suites — it picked up a Safari visibility test and a forbidden-characters test that baseline missed entirely.
+
+But it also created a new failure: the model started treating context as *requirements*. It wrote tests for "Safari" and "forbidden characters" as if the current story said those things — it didn't. The story is about a chat disclaimer. Safari and forbidden characters came from linked bug reports.
+
+**Lesson:** historical context is a hint, not a spec. If the prompt does not explicitly tell the model that context does not add new requirements, the model will assume it does.
+
+---
+
+### 3. "Edge Case" was silently replacing "Negative"
+
+The prompt originally said "include at least one Negative or Edge Case test". The model consistently chose Edge Case (e.g. "verify disclaimer persists when reopened") and never produced a true Negative test (e.g. "what happens when something breaks"). Edge Case and Negative are not the same thing.
+
+**Lesson:** never use "OR" in a requirement when you mean AND. If you need a Negative test, ask for a Negative test explicitly and close the escape hatch.
+
+---
+
+### 4. Forward-reference language in expected results is a red flag
+
+One generated test had this expected result: *"The message is highly visible and correctly positioned according to the specified placement options."*
+
+That phrase — "according to the specified placement options" — is not an observable outcome. It is a reference to a requirement that was never spelled out. A tester reading that cannot determine pass or fail.
+
+**Lesson:** expected results must describe what a human tester can actually observe — not refer to a spec that may not exist. Add an explicit rule banning forward-reference phrases ("as specified", "per requirements", "according to spec").
+
+---
+
+### 5. The thinking model needs a much larger token budget
+
+We use `gemini-3-flash-preview` as the generator. It is a thinking model, meaning it reasons internally before writing output. That internal reasoning consumes roughly 8,000 tokens that count against `max_output_tokens` — leaving very little room for the actual JSON.
+
+Setting `max_output_tokens=8192` caused the JSON to be truncated mid-string. Setting it to `16384` fixed the problem.
+
+**Lesson:** with thinking models, `max_output_tokens` covers both thinking tokens and visible output tokens. Always give a thinking model at least double the headroom you would give a non-thinking model.
+
+---
+
+### 6. Use a cheap non-thinking model as the judge
+
+For evaluation (AnswerRelevancy, Faithfulness), we use a separate judge model: `gemini-3.1-flash-lite-preview`. The generator and the judge are deliberately different models.
+
+Using the thinking model as its own judge would be slow and expensive. The judge only needs to classify statements — it does not need to reason deeply. A lightweight model is accurate enough and much cheaper for that task.
+
+**Lesson:** keep the generator and the judge as separate models. Pick the cheapest model that can reliably classify text for the judge role.
+
+---
+
+### 7. Inspect failures before fixing the prompt
+
+After running content-aware checks, the instinct is to immediately rewrite the prompt. We did not do that. First, we ran a failure taxonomy inspector that categorised every problem into named buckets: CONTEXT_OVERREACH, MISSING_NEGATIVE, UNSUPPORTED_ASSUMPTION, and so on.
+
+That step revealed that most enriched-mode problems were one root cause (context bleeding into spec) — not three separate problems. Without the taxonomy, we would have made three separate prompt changes instead of one focused one.
+
+**Lesson:** classify failures first, fix second. Random prompt tweaking without a taxonomy leads to regressions — you fix one thing and break another without knowing why.
+
+---
+
+### 8. Jira API quirks you will hit immediately
+
+- `issuelinks` is not allowed on issue creation. You must create the issue first, then POST to `/rest/api/3/issueLink` separately.
+- Every description field must use Atlassian Document Format (ADF). Passing a plain string returns a 400 error.
+- ADF heading nodes (like "Steps to Reproduce") are very short strings — if you try to extract the first meaningful sentence from an ADF description, you will accidentally extract the heading instead. Filter for lines of at least 20 characters.
+
+---
+
+### 9. `GOOGLE_API_KEY` silently overrides `GEMINI_API_KEY` in deepeval
+
+When both environment variables are set, deepeval's `GeminiModel` picks up `GOOGLE_API_KEY` first, ignoring the `api_key` constructor argument. If your `GOOGLE_API_KEY` does not have Gemini quota, every evaluation call fails with a 429.
+
+**Fix:** explicitly remove `GOOGLE_API_KEY` from the process environment before constructing the judge model, or ensure only one key is set.
+
+---
+
 ## Next Steps
 
 - Add `POST /generate` and expose generation through the API.

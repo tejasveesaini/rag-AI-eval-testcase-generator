@@ -6,10 +6,13 @@ These are the contracts between:
   - the LLM prompt     →  GeneratedTestCase / GeneratedTestSuite
   - the evaluator      →  GeneratedTestSuite
   - the API response   →  GenerationResponse
+  - the retrieval layer→  RetrievalDocument
 
 Do not add or remove fields without bumping the version comment and
 updating the prompt template, evaluator, and tests simultaneously.
 """
+
+from __future__ import annotations
 
 from enum import Enum
 from pydantic import BaseModel, Field
@@ -28,6 +31,103 @@ class CaseType(str, Enum):
     EDGE_CASE = "Edge Case"
     NEGATIVE = "Negative"
     INTEGRATION = "Integration"
+
+
+# ── Evaluation verdict / failure-category enums ────────────────────────────────
+
+class Verdict(str, Enum):
+    """Final decision for one generated test case after all gate rules fire."""
+    PASS  = "pass"
+    WARN  = "warn"
+    BLOCK = "block"
+
+
+class FailureCategory(str, Enum):
+    """Named failure buckets — each maps to a fixed Verdict in DecisionPolicy.
+
+    malformed_but_relevant    – structural fields missing/empty despite the test
+                                 appearing topically related.
+    grounded_but_duplicate    – substantively the same as a historical test,
+                                 grounded in real AC but adds no new coverage.
+    relevant_but_unsupported  – references features or AC not present in the story.
+    should_refuse_generated   – the story had no actionable AC/description, yet
+                                 the LLM still generated a test.
+    useful_but_generic        – passes structural checks but steps/expected result
+                                 are template-level boilerplate (too vague to run).
+    near_duplicate_generated  – almost identical to another test *within this suite*
+                                 (intra-suite duplication).
+    """
+    MALFORMED_BUT_RELEVANT   = "malformed_but_relevant"
+    GROUNDED_BUT_DUPLICATE   = "grounded_but_duplicate"
+    RELEVANT_BUT_UNSUPPORTED = "relevant_but_unsupported"
+    SHOULD_REFUSE_GENERATED  = "should_refuse_generated"
+    USEFUL_BUT_GENERIC       = "useful_but_generic"
+    NEAR_DUPLICATE_GENERATED = "near_duplicate_generated"
+
+
+# ── Per-case gate result ───────────────────────────────────────────────────────
+
+class CaseGateResult(BaseModel):
+    """Gate outcome for a single generated test case."""
+    title: str
+    verdict: Verdict
+    # Ordered list of failure categories that fired (empty = clean pass)
+    failures: list[FailureCategory] = Field(default_factory=list)
+    reasons:  list[str]             = Field(default_factory=list)
+
+
+# ── Suite-level gate report ────────────────────────────────────────────────────
+
+class SuiteGateReport(BaseModel):
+    """Aggregated gate report for a full GeneratedTestSuite."""
+    story_key:   str
+    suite_verdict: Verdict            # worst verdict across all cases
+    case_results:  list[CaseGateResult]
+    pass_count:    int
+    warn_count:    int
+    block_count:   int
+    summary:       str                # human-readable one-liner
+
+
+# ── Input-quality guard (pre-generation rejection layer) ──────────────────────
+
+class InputSignal(str, Enum):
+    """Named signals checked by the input guard before generation is attempted.
+
+    missing_acceptance_criteria  – story has no AC field and none in description.
+    vague_story                  – description + summary below minimum token/word count.
+    weak_context                 – enriched mode requested but context package is empty
+                                   or has too few items to be useful.
+    conflicting_requirements     – negating phrases detected within the same AC block
+                                   (e.g. "must" and "must not" targeting the same noun).
+    insufficient_evidence        – combined score of all signals is too low to generate
+                                   reliable tests (catch-all / final gate).
+    """
+    MISSING_AC               = "missing_acceptance_criteria"
+    VAGUE_STORY              = "vague_story"
+    WEAK_CONTEXT             = "weak_context"
+    CONFLICTING_REQUIREMENTS = "conflicting_requirements"
+    INSUFFICIENT_EVIDENCE    = "insufficient_evidence"
+
+
+class InputSignalResult(BaseModel):
+    """Result for one input quality signal."""
+    signal:  InputSignal
+    verdict: Verdict          # PASS / WARN / BLOCK for this signal alone
+    detail:  str              # human-readable explanation
+
+
+class InputGuardReport(BaseModel):
+    """Full pre-generation input quality report.
+
+    verdict == BLOCK  → caller MUST NOT call the LLM.
+    verdict == WARN   → caller MAY call the LLM but should surface the warning.
+    verdict == PASS   → all checks passed; proceed normally.
+    """
+    issue_key:      str
+    verdict:        Verdict
+    signal_results: list[InputSignalResult]
+    summary:        str   # one-liner for logs / UI
 
 
 # ── A. Story context (input) ───────────────────────────────────────────────────
@@ -180,4 +280,79 @@ class GenerationResponse(BaseModel):
     suite: GeneratedTestSuite
     inline_eval_passed: bool = Field(
         description="True if the suite passed the lightweight inline gate check",
+    )
+
+
+# ── G. Retrieval document (vector/BM25 index atom) ────────────────────────────
+
+class SourceType(str, Enum):
+    """The semantic role of the document in the retrieval index.
+
+    story          — a Jira story (user story, new feature, task)
+    bug            — a defect / bug report
+    historical_test— a previously generated or captured test case
+    qa_note        — a freeform QA observation, coverage hint, or tester note
+    """
+    STORY           = "story"
+    BUG             = "bug"
+    HISTORICAL_TEST = "historical_test"
+    QA_NOTE         = "qa_note"
+
+
+class RetrievalDocument(BaseModel):
+    """G. The single, uniform atom stored in the retrieval index.
+
+    Design goals:
+    - One document = one retrievable concept (story, bug, test, note).
+    - ``body`` is the only field embeddings / BM25 should score against —
+      it is intentionally short (≤ 300 chars) so every document is
+      comparably weighted and easy to inspect.
+    - Metadata fields (source_type, source_key, tags) are filter-only;
+      they must never be concatenated into ``body`` at index time.
+
+    Field contract:
+        doc_id       Globally unique within an index; format:
+                     ``<source_key>#<source_type>[#<seq>]``
+                     e.g. "AIP-2#story", "AIP-10#bug", "AIP-2#historical_test#0"
+        source_type  Semantic role — drives prompt sectioning and eval filtering.
+        source_key   Originating Jira key (story being indexed or related issue key).
+        title        One short imperative/noun phrase (≤ 80 chars).
+                     Must be human-readable and inspection-friendly.
+        body         Single compact paragraph (≤ 300 chars).
+                     Concatenates only the most signal-rich fields:
+                       story   → description first sentence + AC first sentence
+                       bug     → summary + short_text
+                       test    → title + expected_result
+                       qa_note → the note itself
+        tags         Optional free metadata for post-retrieval filtering.
+    """
+
+    doc_id: str = Field(
+        description="Unique document identifier: <source_key>#<source_type>[#<seq>]",
+    )
+    source_type: SourceType = Field(
+        description="Semantic role of this document in the retrieval index",
+    )
+    source_key: str = Field(
+        description="Originating Jira issue key, e.g. AIP-2",
+    )
+    title: str = Field(
+        max_length=80,
+        description="Short human-readable label; used for logging and inspection",
+    )
+    body: str = Field(
+        max_length=300,
+        description="Single compact text block that embeddings / BM25 score against",
+    )
+    components: list[str] = Field(
+        default_factory=list,
+        description="Jira components — metadata filter, not indexed in body",
+    )
+    labels: list[str] = Field(
+        default_factory=list,
+        description="Jira labels — metadata filter, not indexed in body",
+    )
+    feature_area: str | None = Field(
+        default=None,
+        description="Free-text feature area tag, e.g. 'chat-widget', 'auth-flow'",
     )

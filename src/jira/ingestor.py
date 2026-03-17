@@ -127,17 +127,36 @@ def parse_issue(raw: dict[str, Any]) -> StoryContext:
     ]
 
     linked_issues: list[LinkedIssue] = []
+    seen_linked_keys: set[str] = set()
     for link in fields.get("issuelinks") or []:
         linked_raw = link.get("inwardIssue") or link.get("outwardIssue")
         if not linked_raw:
             continue
+        linked_key = linked_raw["key"]
+        if linked_key in seen_linked_keys:
+            continue
         linked_issues.append(
             LinkedIssue(
-                key=linked_raw["key"],
+                key=linked_key,
                 issue_type=linked_raw.get("fields", {}).get("issuetype", {}).get("name", "Unknown"),
                 summary=linked_raw.get("fields", {}).get("summary", ""),
             )
         )
+        seen_linked_keys.add(linked_key)
+
+    for subtask in fields.get("subtasks") or []:
+        subtask_key = subtask.get("key")
+        if not subtask_key or subtask_key in seen_linked_keys:
+            continue
+        subtask_fields = subtask.get("fields", {})
+        linked_issues.append(
+            LinkedIssue(
+                key=subtask_key,
+                issue_type=subtask_fields.get("issuetype", {}).get("name", "Sub-task"),
+                summary=subtask_fields.get("summary", ""),
+            )
+        )
+        seen_linked_keys.add(subtask_key)
 
     return StoryContext(
         issue_key=issue_key,

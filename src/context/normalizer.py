@@ -18,8 +18,11 @@ from src.models.schemas import ContextItem, ContextItemType
 # Map Jira issue type names to semantic categories used for prompt sectioning
 _TYPE_TO_CATEGORY: dict[str, ContextItemType] = {
     "Bug": ContextItemType.BUG,
+    "Defect": ContextItemType.BUG,
     "TestCase": ContextItemType.TEST,
+    "Test Case": ContextItemType.TEST,
     "Sub-task": ContextItemType.TEST,   # TestCase subtasks may show as Sub-task
+    "Subtask": ContextItemType.TEST,
     "Story": ContextItemType.STORY,
     "New Feature": ContextItemType.STORY,
     "Task": ContextItemType.STORY,
@@ -27,6 +30,25 @@ _TYPE_TO_CATEGORY: dict[str, ContextItemType] = {
 
 # Extract the first meaningful sentence (10+ chars) from any text block
 _FIRST_SENTENCE_RE = re.compile(r"([^.!?\n]{10,}[.!?\n])")
+
+
+def _normalize_issue_type_name(name: str | None) -> str:
+    return re.sub(r"[\s_-]+", "", (name or "").strip()).lower()
+
+
+def _issue_type_to_category(issue_type_name: str) -> ContextItemType:
+    """Map Jira issue type names to internal context categories."""
+    if issue_type_name in _TYPE_TO_CATEGORY:
+        return _TYPE_TO_CATEGORY[issue_type_name]
+
+    normalized = _normalize_issue_type_name(issue_type_name)
+    if normalized in {"bug", "defect"}:
+        return ContextItemType.BUG
+    if normalized in {"testcase", "subtask"} or "test" in normalized:
+        return ContextItemType.TEST
+    if normalized in {"story", "newfeature", "task"}:
+        return ContextItemType.STORY
+    return ContextItemType.OTHER
 
 
 def _first_sentence(text: str | None) -> str | None:
@@ -64,7 +86,7 @@ def normalize_related_issue(
         return None
 
     issue_type_name = fields.get("issuetype", {}).get("name", "Other")
-    category = _TYPE_TO_CATEGORY.get(issue_type_name, ContextItemType.OTHER)
+    category = _issue_type_to_category(issue_type_name)
 
     # Extract short_text: first meaningful sentence from description
     raw_description = fields.get("description")
@@ -114,3 +136,36 @@ def normalize_raw_context(raw_context: dict[str, Any]) -> dict[str, list[Context
             seen_keys.add(item.key)
 
     return {"linked": linked_items, "jql": jql_items}
+
+
+def normalize_discovered_issues(
+    raw_issues: list[dict],
+    relevance_hint: str = "keyword/fallback discovery",
+) -> list["ContextItem"]:
+    """Normalize a flat list of raw Jira issue dicts from the discovery pipeline.
+
+    Unlike ``normalize_raw_context`` (which separates linked vs jql lists),
+    this function accepts any flat list of raw issue dicts — typically the
+    output from ``collector.search_related_issues()``.
+
+    Deduplication: if the same key appears twice it is kept only once.
+
+    Args:
+        raw_issues:      Raw Jira dicts as returned by the JQL search.
+        relevance_hint:  Human-readable label stored on each ContextItem
+                         explaining how it was discovered.
+
+    Returns:
+        List of ContextItems, one per unique issue, skipping issues that
+        could not be parsed (missing key or summary).
+    """
+    seen_keys: set[str] = set()
+    items: list[ContextItem] = []
+
+    for raw in raw_issues:
+        item = normalize_related_issue(raw, relevance_hint=relevance_hint)
+        if item and item.key not in seen_keys:
+            seen_keys.add(item.key)
+            items.append(item)
+
+    return items

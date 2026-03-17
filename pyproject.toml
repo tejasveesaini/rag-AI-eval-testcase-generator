@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-ai-eval-testcase-generator"
+version = "0.1.0"
+description = "Tools for generating and evaluating RAG AI testcases from Jira stories"
+authors = [ { name = "tejasveesaini" } ]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx",
+  "chromadb",
+  "deepeval",
+  "fastapi",
+  "google-genai",
+  "pydantic",
+  "pydantic-settings",
+  "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-asyncio",
+  "black",
+  "ruff",
+]
