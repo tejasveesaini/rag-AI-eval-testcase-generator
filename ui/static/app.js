@@ -1,11 +1,12 @@
 const state = {
-  selectedKey: "AIP-2",
+  selectedKey: "",
   activeSuite: "enriched",
   activeWorkspaceTab: "story",
   activeTestsTab: "generated",
   workspace: null,
   issue: null,
   evaluation: null,
+  generationLatency: null,
   logs: [],
   history: [],
   selectedTests: [],
@@ -16,7 +17,7 @@ const state = {
 };
 
 function runLabel(mode) {
-  return mode === "enriched" ? "Context-backed suite" : "Saved suite";
+  return "Context-backed suite";
 }
 
 async function requestJson(url, options = {}) {
@@ -114,10 +115,61 @@ function setBusy(isBusy, actionKey = null, busyLabel = "") {
   renderBusyState();
 }
 
+// ── Banner helpers ────────────────────────────────────────────────────────────
+// bannerSteps: null | Array<{ label: string, status: "pending"|"active"|"done"|"error" }>
+
+const _bannerState = { steps: null };
+
 function showBanner(message, tone = "neutral") {
+  _bannerState.steps = null;
   const banner = document.getElementById("actionBanner");
-  banner.textContent = message;
   banner.className = `action-banner ${tone}`;
+  banner.innerHTML = `<span class="banner-message">${escapeHtml(message)}</span>`;
+}
+
+/**
+ * Start a multi-step banner.
+ * @param {string[]} stepLabels  — ordered list of step descriptions
+ * @param {string}   tone        — "neutral" | "success" | "warning"
+ */
+function startBannerSteps(stepLabels, tone = "neutral") {
+  _bannerState.steps = stepLabels.map((label) => ({ label, status: "pending" }));
+  _renderBannerSteps(tone);
+}
+
+/**
+ * Advance a step's status.
+ * @param {number} index   — 0-based step index
+ * @param {"active"|"done"|"error"} status
+ * @param {string} [overrideLabel]  — optional updated label for the step
+ * @param {string} tone
+ */
+function setBannerStep(index, status, overrideLabel = null, tone = "neutral") {
+  if (!_bannerState.steps) return;
+  if (overrideLabel !== null) _bannerState.steps[index].label = overrideLabel;
+  _bannerState.steps[index].status = status;
+  _renderBannerSteps(tone);
+}
+
+function _renderBannerSteps(tone) {
+  const banner = document.getElementById("actionBanner");
+  banner.className = `action-banner ${tone}`;
+  const steps = _bannerState.steps;
+  if (!steps) return;
+
+  const icons = {
+    pending: `<span class="step-icon pending" aria-hidden="true">·</span>`,
+    active: `<span class="step-icon active"  aria-hidden="true"><span class="step-spinner"></span></span>`,
+    done: `<span class="step-icon done"    aria-hidden="true">✓</span>`,
+    info: `<span class="step-icon info"    aria-hidden="true">i</span>`,
+    error: `<span class="step-icon error"   aria-hidden="true">✕</span>`,
+  };
+
+  const html = steps.map((s) =>
+    `<li class="banner-step ${s.status}">${icons[s.status]}<span>${escapeHtml(s.label)}</span></li>`
+  ).join("");
+
+  banner.innerHTML = `<ol class="banner-steps" aria-label="Progress">${html}</ol>`;
 }
 
 function openPushSuccessModal({ issueKey, storyUrl, createdCount }) {
@@ -141,10 +193,7 @@ function closePushSuccessModal() {
 }
 
 function pickActiveSuite(issue) {
-  if (!issue) return "baseline";
-  if (issue.suites?.enriched) return "enriched";
-  if (issue.suites?.baseline) return "baseline";
-  return issue.context ? "enriched" : "baseline";
+  return "enriched";
 }
 
 function compactText(value, fallback = "None") {
@@ -173,6 +222,29 @@ function bulletListFromBlock(value, emptyMessage) {
   return `
     <ul class="story-detail-list">
       ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function acTagList(value, emptyMessage) {
+  // Strip leading bullet/dash markers the same way bulletListFromBlock does,
+  // then render each criterion as a tagged row: [AC-N chip] + text.
+  const items = String(value ?? "")
+    .split(/\n+/)
+    .map((item) => item.replace(/^[\s\-\*•]+/, "").trim())
+    .filter(Boolean);
+
+  if (!items.length) {
+    return `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
+  }
+
+  return `
+    <ul class="ac-tag-list">
+      ${items.map((item, i) => `
+        <li class="ac-tag-row">
+          <span class="ac-tag-chip">AC-${i + 1}</span>
+          <span class="ac-tag-text">${escapeHtml(item)}</span>
+        </li>`).join("")}
     </ul>
   `;
 }
@@ -337,9 +409,8 @@ async function loadIssue(issueKey) {
   state.selectedKey = issueKey.toUpperCase();
   document.getElementById("issueKeyInput").value = state.selectedKey;
   const issue = await requestJson(`/api/issue/${encodeURIComponent(state.selectedKey)}`);
-  issue.suites = { baseline: null, enriched: null };
+  issue.suites = { enriched: null };
   if (issue.files) {
-    issue.files.baseline = false;
     issue.files.enriched = false;
   }
   state.issue = issue;
@@ -347,6 +418,7 @@ async function loadIssue(issueKey) {
   state.activeTestsTab = "existing";
   state.selectedTests = [];
   state.evaluation = null;
+  state.generationLatency = null;
   state.suiteSummaryExpanded = false;
   await refreshHistory();
   renderWorkspace();
@@ -380,8 +452,15 @@ async function runAction(path, payload, options = {}) {
     state.issue = result.payload.issue;
     state.activeSuite = pickActiveSuite(state.issue);
   }
-  if (result.payload?.evaluation) {
+  // Only update evaluation state when the evaluate action ran — not on generate.
+  // This prevents the Evaluate tab from showing stale/partial data after generation.
+  if (path === "/api/actions/evaluate" && result.payload?.evaluation) {
     state.evaluation = result.payload.evaluation;
+  }
+  // Capture generation latency separately so it can be shown on the Tests tab
+  // without polluting the Evaluate tab.
+  if (path === "/api/actions/generate" && result.payload?.latency) {
+    state.generationLatency = result.payload.latency;
   }
   if (result.payload?.history) {
     state.history = result.payload.history;
@@ -399,27 +478,46 @@ async function runAction(path, payload, options = {}) {
   renderConsole();
   renderBusyState();
 
-  const tone = result.ok
-    && !(result.payload?.evaluation && !result.payload.evaluation.passed)
-    && !((result.payload?.failed || []).length)
-    ? "success"
-    : "warning";
-  showBanner(result.message, tone);
+  // If a step-banner is active, let the caller manage the banner rather than
+  // overwriting the progress list with the generic server message.
+  if (!_bannerState.steps) {
+    const tone = result.ok
+      && !(result.payload?.evaluation && !result.payload.evaluation.passed)
+      && !((result.payload?.failed || []).length)
+      ? "success"
+      : "warning";
+    showBanner(result.message, tone);
+  }
   return result;
 }
 
 async function runLoadFlow(issueKey) {
   setBusy(true, "load", "Loading story...");
+  startBannerSteps([
+    `Fetching story ${issueKey} from Jira`,
+    "Collecting & indexing context (linked defects, related stories)",
+    "Loading workspace",
+  ]);
   try {
     state.activeWorkspaceTab = "story";
     renderWorkspaceTabs();
+
+    setBannerStep(0, "active");
     await runAction("/api/actions/fetch", { issue_key: issueKey }, { timeoutMs: 60000 });
+    setBannerStep(0, "done");
+
+    setBannerStep(1, "active");
     try {
       await runAction("/api/actions/collect-context", { issue_key: issueKey }, { timeoutMs: 90000 });
+      setBannerStep(1, "done");
     } catch (error) {
-      showBanner(`Story loaded, but context refresh failed: ${error.message}`, "warning");
+      setBannerStep(1, "error", `Context refresh failed: ${error.message}`);
     }
+
+    setBannerStep(2, "active");
     await loadIssue(issueKey);
+    setBannerStep(2, "done", "Workspace ready", "success");
+    _renderBannerSteps("success");
   } catch (error) {
     const detail = error.message.includes("timed out")
       ? `${error.message} The backend may still be working. Open Console to inspect progress.`
@@ -525,9 +623,9 @@ function renderStory() {
           </div>
         </div>
         <div class="story-detail-row">
-          <span class="detail-key">Acceptance</span>
+          <span class="detail-key">Acceptance Criteria</span>
           <div class="detail-value">
-            ${bulletListFromBlock(storySections.acceptanceText, "No acceptance criteria extracted.")}
+            ${acTagList(storySections.acceptanceText, "No acceptance criteria extracted.")}
           </div>
         </div>
       </div>
@@ -848,9 +946,9 @@ async function runLoadNextAction() {
   const mode = state.activeSuite;
   const suite = state.issue?.suites?.[mode];
   const offset = suite?.tests?.length ?? 0;
-  const needsTopUp = offset > 0 && offset < 10;
-  const max_tests = needsTopUp ? 10 - offset : 10;
-  const progressLabel = needsTopUp ? `Filling to 10 (${max_tests} more)...` : "Loading next 10...";
+  const needsTopUp = offset > 0 && offset < 5;
+  const max_tests = needsTopUp ? 5 - offset : 5;
+  const progressLabel = needsTopUp ? `Filling to 5 (${max_tests} more)...` : "Loading next 5...";
 
   setBusy(true, "load-next", progressLabel);
   try {
@@ -881,63 +979,200 @@ function renderEvaluation() {
   const metrics = document.getElementById("deepEvalMetrics");
   const context = document.getElementById("evaluationContext");
   const runLabelEl = document.getElementById("evaluationRunLabel");
+  const latencyStrip = document.getElementById("latencyStrip");
+  const perTestSection = document.getElementById("perTestRelevancy");
+  const perTestMeta = document.getElementById("perTestRelevancyMeta");
+  const perTestList = document.getElementById("perTestRelevancyList");
+  const acSection = document.getElementById("acCoverageSection");
+  const acMeta = document.getElementById("acCoverageMeta");
+  const acList = document.getElementById("acCoverageList");
+  const hallucSection = document.getElementById("hallucinationSection");
+  const hallucMeta = document.getElementById("hallucinationMeta");
+  const hallucList = document.getElementById("hallucinationList");
 
   runLabelEl.textContent = `Current suite: ${runLabel(state.activeSuite)}`;
 
-  if (!state.evaluation) {
+  const reset = () => {
     summary.className = "summary-surface empty-state";
     summary.textContent = "Run evaluation to inspect DeepEval metrics and context relevance.";
     metrics.innerHTML = "";
     context.innerHTML = "";
+    latencyStrip.hidden = true;
+    latencyStrip.innerHTML = "";
+    perTestSection.hidden = true;
+    acSection.hidden = true;
+    hallucSection.hidden = true;
+  };
+
+  if (!state.evaluation) {
+    reset();
     return;
   }
 
-  const deep = state.evaluation.deepeval;
+  const ev = state.evaluation;
+  const deep = ev.deepeval;
+  const latency = ev.latency || {};
+  const acCov = ev.ac_coverage || {};
+  const halluc = ev.hallucination || {};
 
-  summary.className = state.evaluation.passed ? "summary-surface evaluation-summary pass" : "summary-surface evaluation-summary fail";
+  // ── Summary banner ─────────────────────────────────────────────────────────
+  summary.className = ev.passed
+    ? "summary-surface evaluation-summary pass"
+    : "summary-surface evaluation-summary fail";
   summary.innerHTML = `
-    <strong>${state.evaluation.passed ? "Evaluation passed" : "Evaluation needs attention"}</strong>
-    <span>${escapeHtml(runLabel(state.evaluation.mode))}${deep?.judge_model ? ` · Judge: ${escapeHtml(deep.judge_model)}` : ""}</span>
+    <strong>${ev.passed ? "Evaluation passed" : "Evaluation needs attention"}</strong>
+    <span>${escapeHtml(runLabel(ev.mode))}${deep?.judge_model ? ` · Judge: ${escapeHtml(deep.judge_model)}` : ""}</span>
   `;
 
+  // ── Latency strip ──────────────────────────────────────────────────────────
+  const genSec = latency.generation_seconds;
+  const evalSec = latency.evaluation_seconds;
+  if (genSec != null || evalSec != null) {
+    const chips = [];
+    if (genSec != null) chips.push(`<span class="latency-chip">⏱ Generation: <strong>${genSec.toFixed(1)}s</strong></span>`);
+    if (evalSec != null) chips.push(`<span class="latency-chip">⏱ Evaluation: <strong>${evalSec.toFixed(1)}s</strong></span>`);
+    if (latency.recorded_at) chips.push(`<span class="latency-chip muted">Recorded ${escapeHtml(latency.recorded_at.replace("T", " ").slice(0, 19))} UTC</span>`);
+    latencyStrip.innerHTML = chips.join("");
+    latencyStrip.hidden = false;
+  } else {
+    latencyStrip.hidden = true;
+  }
+
+  // ── Suite-level DeepEval metrics ───────────────────────────────────────────
   if (deep) {
     metrics.innerHTML = (deep.metrics || [])
       .map((metric) => `
-        <article class="metric-card-detail ${metric.passed ? "pass" : "fail"}">
+        <article class="metric-card-detail ${metric.passed ? "pass" : metric.skipped ? "skipped" : "fail"}">
           <div class="metric-card-head">
             <strong>${escapeHtml(metric.name)}</strong>
             <span>${metric.passed ? "PASS" : metric.skipped ? "SKIPPED" : "FAIL"}</span>
           </div>
-          <p>Score: ${escapeHtml(metric.score.toFixed ? metric.score.toFixed(3) : metric.score)} / threshold ${escapeHtml(metric.threshold)}</p>
+          <p>Score: ${escapeHtml(metric.score?.toFixed ? metric.score.toFixed(3) : String(metric.score ?? "—"))} / threshold ${escapeHtml(String(metric.threshold))}</p>
           <p>${escapeHtml(metric.reason)}</p>
         </article>
       `)
       .join("");
+  } else {
+    metrics.innerHTML = "";
+  }
 
+  // ── Per-test relevancy ─────────────────────────────────────────────────────
+  const ptr = deep?.per_test_relevancy;
+  if (ptr && ptr.results && ptr.results.length) {
+    perTestMeta.textContent =
+      `${ptr.pass_count} pass / ${ptr.fail_count} fail · avg score ${ptr.avg_score?.toFixed(3) ?? "—"} · threshold ${ptr.threshold}`;
+    perTestList.innerHTML = ptr.results.map((r) => `
+      <div class="per-test-row ${r.passed ? "pass" : "fail"}">
+        <div class="per-test-score">${r.score?.toFixed ? r.score.toFixed(2) : "—"}</div>
+        <div class="per-test-body">
+          <strong class="per-test-title">${escapeHtml(r.title)}</strong>
+          ${r.reason ? `<p class="per-test-reason">${escapeHtml(r.reason)}</p>` : ""}
+        </div>
+        <div class="per-test-badge ${r.passed ? "pass" : "fail"}">${r.passed ? "PASS" : "REVIEW"}</div>
+      </div>
+    `).join("");
+    perTestSection.hidden = false;
+  } else {
+    perTestSection.hidden = true;
+  }
+
+  // ── AC Coverage ────────────────────────────────────────────────────────────
+  const phantomCallout = document.getElementById("phantomCallout");
+  if (acCov && acCov.items && acCov.items.length) {
+    const ratio = acCov.coverage_ratio != null
+      ? `${(acCov.coverage_ratio * 100).toFixed(0)}%`
+      : "—";
+    const phantomCount = acCov.phantom_tags?.length || 0;
+    const verdictLabel = acCov.verdict?.toUpperCase() ?? "";
+    acMeta.textContent = `${acCov.covered_ac}/${acCov.total_ac} AC covered (${ratio}) · ${verdictLabel}`;
+    acMeta.className = `eval-section-meta verdict-${(acCov.verdict || "pass").toLowerCase()}`;
+
+    // Real AC rows only — one row per story AC
+    acList.innerHTML = acCov.items.map((item) => `
+      <div class="ac-row ${item.covered ? "pass" : "fail"}">
+        <span class="ac-label">${escapeHtml(item.ac_label)}</span>
+        <span class="ac-status">${item.covered ? "✅ Covered" : "❌ Not covered"}</span>
+        <span class="ac-text">${escapeHtml(item.ac_text)}</span>
+        ${item.covering_tests && item.covering_tests.length
+        ? `<ul class="ac-covering-tests">${item.covering_tests.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`
+        : ""}
+      </div>
+    `).join("");
+
+    // Phantom tags — shown as a separate callout below the AC table, not mixed in
+    if (phantomCallout) {
+      if (phantomCount) {
+        const tagList = acCov.phantom_tags.map((p) =>
+          `<li><span class="phantom-tag-label">${escapeHtml(p.tag)}</span> — ${escapeHtml(p.test)}</li>`
+        ).join("");
+        phantomCallout.innerHTML = `
+          <span class="phantom-callout-icon">⚠</span>
+          <div class="phantom-callout-body">
+            <strong>${phantomCount} test${phantomCount > 1 ? "s reference" : " references"} an AC tag not found in this story.</strong>
+            <p class="phantom-callout-hint">The model invented these tags. Tests are still valid but should be re-tagged to AC-1 or a real acceptance criterion.</p>
+            <ul class="phantom-tag-list">${tagList}</ul>
+          </div>`;
+        phantomCallout.hidden = false;
+      } else {
+        phantomCallout.hidden = true;
+      }
+    }
+
+    acSection.hidden = false;
+  } else if (acCov.summary) {
+    acMeta.textContent = acCov.summary;
+    acMeta.className = "eval-section-meta";
+    acList.innerHTML = `<p class="empty-state">${escapeHtml(acCov.summary)}</p>`;
+    acSection.hidden = false;
+  } else {
+    acSection.hidden = true;
+  }
+
+  // ── Hallucination ──────────────────────────────────────────────────────────
+  if (halluc && typeof halluc.flagged_count === "number") {
+    hallucMeta.textContent = halluc.summary || `${halluc.flagged_count} test(s) flagged`;
+    hallucMeta.className = `eval-section-meta ${halluc.flagged_count > 0 ? "verdict-warn" : "verdict-pass"}`;
+    if (halluc.flags && halluc.flags.length) {
+      hallucList.innerHTML = halluc.flags.map((flag) => `
+        <div class="halluc-row">
+          <strong>${escapeHtml(flag.title)}</strong>
+          <p>${escapeHtml(flag.reason)}</p>
+          <ul class="halluc-values">${(flag.hallucinated_values || []).map((v) => `<li><code>${escapeHtml(v)}</code></li>`).join("")}</ul>
+        </div>
+      `).join("");
+    } else {
+      hallucList.innerHTML = `<p class="empty-state">No hallucinated specific values detected.</p>`;
+    }
+    hallucSection.hidden = false;
+  } else {
+    hallucSection.hidden = true;
+  }
+
+  // ── Context preview (retrieval) ────────────────────────────────────────────
+  if (deep) {
     const retrievalPreview = (deep.retrieval_context || []).slice(0, 5)
       .map((entry) => `<li>${escapeHtml(entry)}</li>`)
       .join("");
 
     context.innerHTML = `
       <div class="context-preview-grid">
-        <article class="context-preview">
-          <h4>Story input sent to DeepEval</h4>
+        <details class="context-preview">
+          <summary><span>Story input sent to DeepEval</span></summary>
           <pre>${escapeHtml(deep.story_input || "")}</pre>
-        </article>
-        <article class="context-preview">
-          <h4>Generated output evaluated</h4>
+        </details>
+        <details class="context-preview">
+          <summary><span>Generated output evaluated</span></summary>
           <pre>${escapeHtml(deep.actual_output || "")}</pre>
-        </article>
+        </details>
       </div>
       ${(deep.retrieval_context || []).length ? `
-        <article class="context-preview">
-          <h4>Retrieval context</h4>
+        <details class="context-preview">
+          <summary><span>Retrieval context (${(deep.retrieval_context || []).length} items)</span></summary>
           <ul>${retrievalPreview}</ul>
-        </article>
+        </details>
       ` : ""}
     `;
   } else {
-    metrics.innerHTML = "";
     context.innerHTML = "";
   }
 }
@@ -1109,26 +1344,76 @@ function bindEvents() {
       setBusy(true, action, actionLabelMap[action] || "Working...");
       try {
         if (action === "collect-context") {
+          startBannerSteps([`Collecting context for ${issueKey} (linked defects, related stories, history)`]);
+          setBannerStep(0, "active");
           await runAction("/api/actions/collect-context", { issue_key: issueKey }, { timeoutMs: 90000 });
+          setBannerStep(0, "done", "Context collected & indexed", "success");
+          _renderBannerSteps("success");
           return;
         }
         if (action === "generate") {
-          if (!state.issue?.context) {
-            showBanner("Refreshing context before generation...", "neutral");
+          const needsContext = !state.issue?.context;
+          const steps = needsContext
+            ? [
+              `Collecting context for ${issueKey}`,
+              "Generating test cases with context (thinking model)",
+            ]
+            : ["Generating test cases with context (thinking model)"];
+          startBannerSteps(steps);
+          let genIdx = 0;
+
+          if (needsContext) {
+            setBannerStep(0, "active");
             await runAction("/api/actions/collect-context", { issue_key: issueKey }, { timeoutMs: 90000 });
+            setBannerStep(0, "done");
+            genIdx = 1;
           }
+
           state.activeSuite = "enriched";
           state.activeWorkspaceTab = "tests";
           state.activeTestsTab = "generated";
           renderWorkspaceTabs();
-          showBanner("Generating top 10 test cases. You can switch to Console while the request runs.", "neutral");
-          await runAction("/api/actions/generate", { issue_key: issueKey, mode: state.activeSuite, max_tests: 10, offset: 0 }, { timeoutMs: 150000 });
+
+          setBannerStep(genIdx, "active");
+          await runAction("/api/actions/generate", { issue_key: issueKey, mode: state.activeSuite, max_tests: 5, offset: 0 }, { timeoutMs: 150000 });
+          setBannerStep(genIdx, "done", "Test cases generated", "success");
+          _renderBannerSteps("success");
           return;
         }
         if (action === "evaluate-current") {
+          startBannerSteps([
+            "Running answer relevancy (per-test scores)",
+            "Running faithfulness & context relevance",
+            "Analysing AC coverage",
+            "Scanning for hallucinations",
+          ]);
+          // All checks run server-side in one call — show them all as active while waiting
+          [0, 1, 2, 3].forEach((i) => setBannerStep(i, "active"));
           state.activeWorkspaceTab = "evaluate";
           renderWorkspaceTabs();
-          await runAction("/api/actions/evaluate", { issue_key: issueKey, mode: state.activeSuite }, { timeoutMs: 150000 });
+          const evalResult = await runAction("/api/actions/evaluate", { issue_key: issueKey, mode: state.activeSuite }, { timeoutMs: 150000 });
+          const ev = evalResult?.payload?.evaluation;
+
+          // Step 0: per-test answer relevancy
+          const perTest = ev?.deepeval?.per_test_relevancy;
+          const relevancyOk = perTest ? perTest.fail_count === 0 : true;
+          setBannerStep(0, relevancyOk ? "done" : "info");
+
+          // Step 1: faithfulness & context relevance (deepeval.metrics array)
+          const deepMetrics = ev?.deepeval?.metrics || [];
+          const faithFail = deepMetrics.some((m) => !m.passed && !m.skipped);
+          setBannerStep(1, faithFail ? "info" : "done");
+
+          // Step 2: AC coverage
+          const acVerdict = ev?.ac_coverage?.verdict;
+          setBannerStep(2, acVerdict === "FAIL" ? "info" : "done");
+
+          // Step 3: hallucination
+          const hallucFlags = ev?.hallucination?.flags?.length || 0;
+          setBannerStep(3, hallucFlags > 0 ? "info" : "done");
+
+          const overallOk = ev?.passed !== false;
+          _renderBannerSteps(overallOk ? "success" : "warning");
         }
       } catch (error) {
         const detail = error.message.includes("timed out")
@@ -1155,12 +1440,8 @@ async function boot() {
   renderWorkspaceTabs();
   try {
     await loadWorkspace();
-    if (state.workspace?.issues?.length) {
-      await loadIssue(state.workspace.issues[0].key);
-    } else {
-      await loadIssue(state.selectedKey);
-    }
     await refreshLogs();
+    renderIssue();
     renderEvaluation();
     renderBusyState();
     showBanner("Workflow ready.", "success");

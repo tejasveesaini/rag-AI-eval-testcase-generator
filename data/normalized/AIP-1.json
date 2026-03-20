@@ -1,0 +1,9 @@
+{
+  "issue_key": "AIP-1",
+  "summary": "Prevent Storing User Financial Data",
+  "description": "As a system administrator,\nI want the application to automatically detect and discard any financial data entered in the chat,\nSo that sensitive customer information is never saved in our database or system logs.",
+  "acceptance_criteria": "The system actively scans chat inputs for patterns like credit card numbers, bank accounts, or routing numbers.\n\nIf found, the data is immediately masked (e.g., replaced with [REDACTED]) before the message is processed or stored by the RAG system.\n\nNo raw financial data is written to any backend logs or databases.",
+  "labels": [],
+  "components": [],
+  "linked_issues": []
+}

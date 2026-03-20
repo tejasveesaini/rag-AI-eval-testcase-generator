@@ -47,8 +47,8 @@ CONTEXT_DIR = Path(__file__).resolve().parents[1] / "data" / "context"
 
 # Day 3: intentionally lenient — establishing the gate matters more than
 # perfect scores. Tighten on Day 4+ as the pipeline matures.
-RELEVANCY_THRESHOLD = 0.5
-FAITHFULNESS_THRESHOLD = 0.5
+RELEVANCY_THRESHOLD = 0.8
+FAITHFULNESS_THRESHOLD = 0.8
 
 # ── Judge model ───────────────────────────────────────────────────────────────
 

@@ -1,0 +1,13 @@
+{
+  "issue_key": "AIP-16",
+  "summary": "User should be able to login using email and passcode.",
+  "description": "As a user, I want to authenticate with my email address and a passcode so that I can access my account securely without a full password.\nAcceptance Criteria\nGiven I am on the login screen, I can enter my registered email address and a 6-digit numeric passcode.\n\nIf the credentials are correct, I am authenticated and redirected to the home screen.\n\nIf the credentials are incorrect, I see a clear error message; the account locks after 5 failed attempts.\n\nA 'Forgot passcode' flow allows me to reset my passcode via a verified email link.\n\nPasscode transmission is encrypted in transit (TLS 1.2+).\n\nThe login flow is accessible (WCAG 2.1 AA compliant).",
+  "acceptance_criteria": null,
+  "labels": [
+    "authentication",
+    "login",
+    "security"
+  ],
+  "components": [],
+  "linked_issues": []
+}

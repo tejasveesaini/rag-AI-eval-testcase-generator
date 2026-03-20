@@ -1,11 +1,11 @@
 {
   "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
-  "id": "10007",
-  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10007",
-  "key": "AIP-2",
+  "id": "10092",
+  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10092",
+  "key": "AIP-13",
   "fields": {
     "customfield_10016": null,
-    "summary": "Customer Chat Warning Prompt",
+    "summary": "User can delete their associated data.",
     "issuetype": {
       "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10004",
       "id": "10004",
@@ -19,11 +19,11 @@
     "components": [],
     "subtasks": [
       {
-        "id": "10043",
-        "key": "AIP-4",
-        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10043",
+        "id": "10129",
+        "key": "AIP-17",
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10129",
         "fields": {
-          "summary": "Verify security disclaimer appears on chat initialization",
+          "summary": "Verify confirmation dialog appears when requesting data deletion",
           "status": {
             "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
             "description": "The work item is open and ready for the assignee to start work on it.",
@@ -57,11 +57,11 @@
         }
       },
       {
-        "id": "10045",
-        "key": "AIP-5",
-        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10045",
+        "id": "10238",
+        "key": "AIP-24",
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10238",
         "fields": {
-          "summary": "Verify disclaimer text content accuracy",
+          "summary": "Verify user cannot log in after account deletion is processed",
           "status": {
             "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
             "description": "The work item is open and ready for the assignee to start work on it.",
@@ -95,49 +95,11 @@
         }
       },
       {
-        "id": "10047",
-        "key": "AIP-6",
-        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10047",
+        "id": "10240",
+        "key": "AIP-25",
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10240",
         "fields": {
-          "summary": "Verify disclaimer placement and visibility",
-          "status": {
-            "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
-            "description": "The work item is open and ready for the assignee to start work on it.",
-            "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
-            "name": "Open",
-            "id": "1",
-            "statusCategory": {
-              "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
-              "id": 2,
-              "key": "new",
-              "colorName": "blue-gray",
-              "name": "To Do"
-            }
-          },
-          "priority": {
-            "self": "https://tejasworkspace.atlassian.net/rest/api/3/priority/3",
-            "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/priorities/medium_new.svg",
-            "name": "Medium",
-            "id": "3"
-          },
-          "issuetype": {
-            "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10012",
-            "id": "10012",
-            "description": "Test cases related to feature",
-            "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10570?size=medium",
-            "name": "TestCase",
-            "subtask": true,
-            "avatarId": 10570,
-            "hierarchyLevel": -1
-          }
-        }
-      },
-      {
-        "id": "10049",
-        "key": "AIP-7",
-        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10049",
-        "fields": {
-          "summary": "Verify warning message is not hidden by input focus",
+          "summary": "Verify receipt of email confirmation upon completion of data deletion",
           "status": {
             "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
             "description": "The work item is open and ready for the assignee to start work on it.",
@@ -180,80 +142,25 @@
           "content": [
             {
               "type": "text",
-              "text": "As a",
-              "marks": [
-                {
-                  "type": "strong"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "text": " customer using the chat,"
+              "text": "As a user, I want to permanently delete all personal data associated with my account so that I have full control over my privacy."
             }
           ],
           "attrs": {
-            "localId": "109e821c4f08"
+            "localId": "a872f264522e"
           }
         },
         {
-          "type": "paragraph",
+          "type": "heading",
+          "attrs": {
+            "level": 3,
+            "localId": "74370a2893c5"
+          },
           "content": [
             {
               "type": "text",
-              "text": "I want",
-              "marks": [
-                {
-                  "type": "strong"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "text": " to see a clear warning message before I start typing,"
+              "text": "Acceptance Criteria"
             }
-          ],
-          "attrs": {
-            "localId": "29d6cf5f30d8"
-          }
-        },
-        {
-          "type": "paragraph",
-          "content": [
-            {
-              "type": "text",
-              "text": "So that",
-              "marks": [
-                {
-                  "type": "strong"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "text": " I am reminded to keep my personal financial details private and secure."
-            }
-          ],
-          "attrs": {
-            "localId": "59658fa0e07c"
-          }
-        },
-        {
-          "type": "paragraph",
-          "content": [
-            {
-              "type": "text",
-              "text": "Acceptance Criteria:",
-              "marks": [
-                {
-                  "type": "strong"
-                }
-              ]
-            }
-          ],
-          "attrs": {
-            "localId": "9e5a398430f9"
-          }
+          ]
         },
         {
           "type": "bulletList",
@@ -261,7 +168,7 @@
             {
               "type": "listItem",
               "attrs": {
-                "localId": "138eee9fcea5"
+                "localId": "0ea2891e8854"
               },
               "content": [
                 {
@@ -269,24 +176,11 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "A brief disclaimer (e.g., "
-                    },
-                    {
-                      "type": "text",
-                      "text": "\"For your security, please do not share credit card numbers, bank details, or other financial data in this chat.\"",
-                      "marks": [
-                        {
-                          "type": "em"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "text": ") appears when the chat window opens."
+                      "text": "Given I am logged in, when I request data deletion, then I am shown a confirmation dialog that clearly states the action is irreversible."
                     }
                   ],
                   "attrs": {
-                    "localId": "b43dd038a858"
+                    "localId": "c06abd392c7e"
                   }
                 }
               ]
@@ -294,7 +188,7 @@
             {
               "type": "listItem",
               "attrs": {
-                "localId": "2f725fba46fe"
+                "localId": "b0a25bb68f27"
               },
               "content": [
                 {
@@ -302,88 +196,79 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "The message is highly visible and placed either just above the text input box or as the first automated greeting message."
+                      "text": "After confirming, all personal data (profile, conversations, preferences) is deleted within 30 days."
                     }
                   ],
                   "attrs": {
-                    "localId": "e35496312a70"
+                    "localId": "e7a4f8cb2198"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "attrs": {
+                "localId": "47aa32976190"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "I receive an email confirmation once the deletion is complete."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "740106b0fc01"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "attrs": {
+                "localId": "a44bfeb6acaf"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "I cannot log in with the deleted account after the deletion is processed."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "09dab80d9f78"
                   }
                 }
               ]
             }
           ],
           "attrs": {
-            "localId": "5b87e31393fd"
+            "localId": "3d22e7b2b8a8"
           }
         }
       ]
     },
     "issuelinks": [
       {
-        "id": "10000",
-        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLink/10000",
+        "id": "10036",
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLink/10036",
         "type": {
-          "id": "10003",
-          "name": "Relates",
-          "inward": "relates to",
-          "outward": "relates to",
-          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLinkType/10003"
+          "id": "10006",
+          "name": "Problem/Incident",
+          "inward": "is caused by",
+          "outward": "causes",
+          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLinkType/10006"
         },
-        "inwardIssue": {
-          "id": "10057",
-          "key": "AIP-10",
-          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10057",
+        "outwardIssue": {
+          "id": "10230",
+          "key": "AIP-20",
+          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10230",
           "fields": {
-            "summary": "Chat input allows forbidden characters",
-            "status": {
-              "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
-              "description": "The work item is open and ready for the assignee to start work on it.",
-              "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
-              "name": "Open",
-              "id": "1",
-              "statusCategory": {
-                "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
-                "id": 2,
-                "key": "new",
-                "colorName": "blue-gray",
-                "name": "To Do"
-              }
-            },
-            "priority": {
-              "self": "https://tejasworkspace.atlassian.net/rest/api/3/priority/3",
-              "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/priorities/medium_new.svg",
-              "name": "Medium",
-              "id": "3"
-            },
-            "issuetype": {
-              "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10003",
-              "id": "10003",
-              "description": "Bugs track problems or errors.",
-              "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10679?size=medium",
-              "name": "Bug",
-              "subtask": false,
-              "avatarId": 10679,
-              "hierarchyLevel": 0
-            }
-          }
-        }
-      },
-      {
-        "id": "10002",
-        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLink/10002",
-        "type": {
-          "id": "10003",
-          "name": "Relates",
-          "inward": "relates to",
-          "outward": "relates to",
-          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLinkType/10003"
-        },
-        "inwardIssue": {
-          "id": "10058",
-          "key": "AIP-11",
-          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10058",
-          "fields": {
-            "summary": "Chat disclaimer not visible on Safari",
+            "summary": "User doesn't get email confirmation",
             "status": {
               "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
               "description": "The work item is open and ready for the assignee to start work on it.",
@@ -433,6 +318,10 @@
         "name": "To Do"
       }
     },
-    "labels": []
+    "labels": [
+      "data-deletion",
+      "gdpr",
+      "privacy"
+    ]
   }
 }

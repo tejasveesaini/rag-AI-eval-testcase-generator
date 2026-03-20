@@ -1,0 +1,34 @@
+{
+  "issue_key": "AIP-13",
+  "summary": "User can delete their associated data.",
+  "description": "As a user, I want to permanently delete all personal data associated with my account so that I have full control over my privacy.\nAcceptance Criteria\nGiven I am logged in, when I request data deletion, then I am shown a confirmation dialog that clearly states the action is irreversible.\n\nAfter confirming, all personal data (profile, conversations, preferences) is deleted within 30 days.\n\nI receive an email confirmation once the deletion is complete.\n\nI cannot log in with the deleted account after the deletion is processed.",
+  "acceptance_criteria": null,
+  "labels": [
+    "data-deletion",
+    "gdpr",
+    "privacy"
+  ],
+  "components": [],
+  "linked_issues": [
+    {
+      "key": "AIP-20",
+      "issue_type": "Bug",
+      "summary": "User doesn't get email confirmation"
+    },
+    {
+      "key": "AIP-17",
+      "issue_type": "TestCase",
+      "summary": "Verify confirmation dialog appears when requesting data deletion"
+    },
+    {
+      "key": "AIP-24",
+      "issue_type": "TestCase",
+      "summary": "Verify user cannot log in after account deletion is processed"
+    },
+    {
+      "key": "AIP-25",
+      "issue_type": "TestCase",
+      "summary": "Verify receipt of email confirmation upon completion of data deletion"
+    }
+  ]
+}

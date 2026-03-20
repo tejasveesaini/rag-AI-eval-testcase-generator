@@ -1,0 +1,158 @@
+{
+  "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+  "id": "10095",
+  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10095",
+  "key": "AIP-16",
+  "fields": {
+    "customfield_10016": null,
+    "summary": "User should be able to login using email and passcode.",
+    "issuetype": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10004",
+      "id": "10004",
+      "description": "A new feature of the product, which has yet to be developed.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10680?size=medium",
+      "name": "New Feature",
+      "subtask": false,
+      "avatarId": 10680,
+      "hierarchyLevel": 0
+    },
+    "components": [],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "As a user, I want to authenticate with my email address and a passcode so that I can access my account securely without a full password."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 3
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Acceptance Criteria"
+            }
+          ]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Given I am on the login screen, I can enter my registered email address and a 6-digit numeric passcode."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "If the credentials are correct, I am authenticated and redirected to the home screen."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "If the credentials are incorrect, I see a clear error message; the account locks after 5 failed attempts."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "A 'Forgot passcode' flow allows me to reset my passcode via a verified email link."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Passcode transmission is encrypted in transit (TLS 1.2+)."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "The login flow is accessible (WCAG 2.1 AA compliant)."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "issuelinks": [],
+    "customfield_10014": null,
+    "status": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+      "description": "The work item is open and ready for the assignee to start work on it.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+      "name": "Open",
+      "id": "1",
+      "statusCategory": {
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "authentication",
+      "login",
+      "security"
+    ]
+  }
+}

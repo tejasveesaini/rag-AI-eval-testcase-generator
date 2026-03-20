@@ -1,0 +1,12 @@
+{
+  "issue_key": "AIP-15",
+  "summary": "User should be able to continue their existing chats.",
+  "description": "As a user, I want to resume any of my previous chat sessions so that I can continue conversations where I left off.\nAcceptance Criteria\nGiven I have one or more previous chat sessions, when I open the chat interface, I can select any past session to resume it.\n\nResuming a session loads the full prior message history and allows me to send new messages.\n\nThe AI model receives the prior context so its responses are coherent with earlier exchanges.\n\nSessions are resumable for at least 30 days after the last message.\n\nI can start a brand-new chat at any time without affecting my existing sessions.",
+  "acceptance_criteria": null,
+  "labels": [
+    "chat",
+    "continuity"
+  ],
+  "components": [],
+  "linked_issues": []
+}

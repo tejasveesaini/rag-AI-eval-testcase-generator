@@ -1,0 +1,25 @@
+{
+  "story_key": "AIP-11",
+  "linked_defects": [],
+  "historical_tests": [
+    {
+      "key": "AIP-5",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify disclaimer text content accuracy",
+      "short_text": "Read the text of the displayed security warning message.",
+      "relevance_hint": "linked issue"
+    }
+  ],
+  "related_stories": [
+    {
+      "key": "AIP-2",
+      "issue_type": "New Feature",
+      "category": "story",
+      "summary": "Customer Chat Warning Prompt",
+      "short_text": "As a customer using the chat,",
+      "relevance_hint": "linked issue"
+    }
+  ],
+  "coverage_hints": []
+}

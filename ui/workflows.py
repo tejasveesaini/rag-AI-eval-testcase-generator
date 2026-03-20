@@ -3,11 +3,12 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+import time
 import traceback
 from collections import Counter
 from collections import deque
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -108,13 +109,10 @@ def get_app_logs(limit: int = 200) -> dict[str, Any]:
 
 def _clear_generated_suites(issue_key: str) -> int:
     removed = 0
-    for path in (
-        GENERATED_DIR / f"{issue_key}_baseline.json",
-        GENERATED_DIR / f"{issue_key}_enriched.json",
-    ):
-        if path.exists():
-            path.unlink()
-            removed += 1
+    path = GENERATED_DIR / f"{issue_key}_enriched.json"
+    if path.exists():
+        path.unlink()
+        removed += 1
     return removed
 
 
@@ -124,7 +122,6 @@ def discover_workspace() -> dict[str, Any]:
         "issues": len(issues),
         "normalized": sum(1 for issue in issues if issue["normalized"]),
         "context": sum(1 for issue in issues if issue["context"]),
-        "baseline": sum(1 for issue in issues if issue["baseline"]),
         "enriched": sum(1 for issue in issues if issue["enriched"]),
     }
     return {
@@ -141,12 +138,10 @@ def get_issue_bundle(issue_key: str) -> dict[str, Any]:
         "raw": RAW_STORY_DIR / f"{key}.json",
         "normalized": NORMALIZED_DIR / f"{key}.json",
         "context": CONTEXT_DIR / f"{key}.json",
-        "baseline": GENERATED_DIR / f"{key}_baseline.json",
         "enriched": GENERATED_DIR / f"{key}_enriched.json",
     }
     story = _load_json(files["normalized"])
     context = _load_json(files["context"])
-    baseline_suite = _load_json(files["baseline"])
     enriched_suite = _load_json(files["enriched"])
     raw_summary = _extract_raw_summary(_load_json(files["raw"]))
 
@@ -157,7 +152,6 @@ def get_issue_bundle(issue_key: str) -> dict[str, Any]:
         "story": story,
         "context": context,
         "suites": {
-            "baseline": _summarize_suite(baseline_suite, files["baseline"]),
             "enriched": _summarize_suite(enriched_suite, files["enriched"]),
         },
     }
@@ -237,7 +231,7 @@ def collect_context(issue_key: str) -> ActionResult:
         return _action_error(f"Unable to collect context for {key}.", exc)
 
 
-def generate_suite(issue_key: str, mode: str, max_tests: int = 10, offset: int = 0) -> ActionResult:
+def generate_suite(issue_key: str, mode: str, max_tests: int = 5, offset: int = 0) -> ActionResult:
     key = _normalize_issue_key(issue_key)
     ui_mode = _normalize_mode(mode)
     batch_label = f"next {max_tests}" if offset > 0 else f"first {max_tests}"
@@ -260,7 +254,9 @@ def generate_suite(issue_key: str, mode: str, max_tests: int = 10, offset: int =
             f"Starting {ui_mode} generation for {key} (offset={offset}, max={max_tests}). Calling Gemini.",
             level="info",
         )
+        gen_start = time.perf_counter()
         suite = _generate_suite(key, ui_mode, story_path, max_tests=max_tests, offset=offset)
+        gen_elapsed = round(time.perf_counter() - gen_start, 3)
         suite_path = GENERATED_DIR / f"{key}_{ui_mode}.json"
         GENERATED_DIR.mkdir(parents=True, exist_ok=True)
         suite_path.write_text(json.dumps(suite, indent=2))
@@ -276,12 +272,21 @@ def generate_suite(issue_key: str, mode: str, max_tests: int = 10, offset: int =
                 "notes": suite.get("notes"),
             },
         )
+        latency_data = {
+            "generation_seconds": gen_elapsed,
+            "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }
+        structural_eval = evaluate_suite_data(suite_path)
+        # NOTE: do NOT embed latency inside evaluation here — the Evaluate tab
+        # only shows latency after the user explicitly runs evaluation.
+        # Generation latency is surfaced via the top-level "latency" key instead.
         payload = {
             "workspace": discover_workspace(),
             "issue": get_issue_bundle(key),
             "suite": suite,
             "mode": ui_mode,
-            "evaluation": evaluate_suite_data(suite_path),
+            "evaluation": structural_eval,
+            "latency": latency_data,
             "logs": get_app_logs(),
         }
         return ActionResult(
@@ -305,13 +310,55 @@ def evaluate_suite(issue_key: str, mode: str) -> ActionResult:
         )
 
     structural = evaluate_suite_data(suite_path)
+
+    eval_wall_start = time.perf_counter()
     deepeval = _run_deepeval_detailed(key, ui_mode)
+    eval_wall_elapsed = round(time.perf_counter() - eval_wall_start, 3)
+
+    # ── AC Coverage check ─────────────────────────────────────────────────────
+    ac_coverage_data: dict[str, Any] = {}
+    hallucination_data: dict[str, Any] = {}
+    try:
+        from src.evaluation.ac_coverage import check_ac_coverage as _check_ac
+        from src.evaluation.hallucination import check_hallucination as _check_halluc
+        from src.models.schemas import ContextPackage, GeneratedTestSuite, StoryContext
+
+        story_path = NORMALIZED_DIR / f"{key}.json"
+        if story_path.exists():
+            story = StoryContext.model_validate_json(story_path.read_text())
+            suite_obj = GeneratedTestSuite.model_validate_json(suite_path.read_text())
+
+            # AC coverage
+            ac_report = _check_ac(suite_obj, story)
+            ac_coverage_data = ac_report.model_dump(mode="json")
+
+            # Hallucination — optionally enrich with context items
+            context_items = []
+            context_path = CONTEXT_DIR / f"{key}.json"
+            if context_path.exists():
+                ctx = ContextPackage.model_validate_json(context_path.read_text())
+                context_items = (
+                    ctx.linked_defects + ctx.historical_tests + ctx.related_stories
+                )
+            halluc_report = _check_halluc(suite_obj, story, context_items or None)
+            hallucination_data = halluc_report.model_dump(mode="json")
+    except Exception as exc:  # pragma: no cover - never fail the whole evaluation
+        add_app_log(f"AC/hallucination checks failed for {key}: {exc}", level="warning")
+
     overall_passed = deepeval["passed"]
+    latency = {
+        "evaluation_seconds": eval_wall_elapsed,
+        "deepeval_seconds": deepeval.get("evaluation_seconds"),
+        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
     evaluation = {
         "mode": ui_mode,
         "passed": overall_passed,
         "structural": structural,
         "deepeval": deepeval,
+        "ac_coverage": ac_coverage_data,
+        "hallucination": hallucination_data,
+        "latency": latency,
     }
     status = "passed" if overall_passed else "failed"
     add_app_log(f"Evaluation {status} for {key} ({ui_mode}).", level="success" if overall_passed else "warning")
@@ -531,12 +578,11 @@ def _run_input_guard(issue_key: str, mode: str, story_path: Path) -> ActionResul
 
     story = StoryContext.model_validate_json(story_path.read_text())
     context: ContextPackage | None = None
-    if mode == "enriched":
-        context_path = CONTEXT_DIR / f"{issue_key}.json"
-        if context_path.exists():
-            context = ContextPackage.model_validate_json(context_path.read_text())
+    context_path = CONTEXT_DIR / f"{issue_key}.json"
+    if context_path.exists():
+        context = ContextPackage.model_validate_json(context_path.read_text())
 
-    report = check_input(story, context=context, mode=mode)  # type: ignore[arg-type]
+    report = check_input(story, context=context, mode="enriched")  # type: ignore[arg-type]
 
     if report.verdict == Verdict.BLOCK:
         # Serialize signal details for the UI
@@ -565,7 +611,7 @@ def _run_input_guard(issue_key: str, mode: str, story_path: Path) -> ActionResul
     return None  # PASS or WARN → proceed
 
 
-def _generate_suite(issue_key: str, mode: str, story_path: Path, max_tests: int = 10, offset: int = 0) -> dict[str, Any]:
+def _generate_suite(issue_key: str, mode: str, story_path: Path, max_tests: int = 5, offset: int = 0) -> dict[str, Any]:
     try:
         from src.generation.generator import generate_test_suite
         from src.models.schemas import ContextPackage, StoryContext
@@ -573,14 +619,11 @@ def _generate_suite(issue_key: str, mode: str, story_path: Path, max_tests: int 
         raise RuntimeError(_dependency_help(exc)) from exc
 
     story = StoryContext.model_validate_json(story_path.read_text())
-    context = None
-
-    if mode == "enriched":
-        context_path = CONTEXT_DIR / f"{issue_key}.json"
-        if not context_path.exists():
-            raise RuntimeError(f"No context package found for {issue_key}. Collect context first.")
-        context = ContextPackage.model_validate_json(context_path.read_text())
-        add_app_log(f"Loaded enriched context from {context_path.relative_to(ROOT)}.", level="info")
+    context_path = CONTEXT_DIR / f"{issue_key}.json"
+    if not context_path.exists():
+        raise RuntimeError(f"No context package found for {issue_key}. Collect context first.")
+    context = ContextPackage.model_validate_json(context_path.read_text())
+    add_app_log(f"Loaded enriched context from {context_path.relative_to(ROOT)}.", level="info")
 
     # ── Load existing tests when appending a next batch ───────────────────────
     existing_tests: list[dict] = []
@@ -621,7 +664,7 @@ def _generate_suite(issue_key: str, mode: str, story_path: Path, max_tests: int 
     accepted_exact_keys: set[str] = set()
     accepted_token_sets: list[set[str]] = []
     note_chunks: list[str] = [existing_notes] if existing_notes else []
-    max_attempts = 3
+    max_attempts = 2
 
     for attempt in range(1, max_attempts + 1):
         remaining = max_tests - len(accepted_tests)
@@ -710,7 +753,7 @@ def _run_deepeval_detailed(issue_key: str, mode: str) -> dict[str, Any]:
     except ModuleNotFoundError as exc:  # pragma: no cover - depends on local env
         raise RuntimeError(_dependency_help(exc)) from exc
 
-    suffix = "_enriched" if mode == "enriched" else "_baseline"
+    suffix = "_enriched"
     suite = _load_suite(issue_key, suffix)
     if suite is None:
         raise RuntimeError(f"No generated suite found for {issue_key} ({mode}).")
@@ -719,7 +762,10 @@ def _run_deepeval_detailed(issue_key: str, mode: str) -> dict[str, Any]:
     actual_output = _suite_to_output(suite)
     judge = _get_judge()
     metrics: list[dict[str, Any]] = []
-    context_relevance_threshold = 0.5
+    context_relevance_threshold = 0.8
+
+    # ── Suite-level Answer Relevancy ──────────────────────────────────────────
+    eval_start = time.perf_counter()
 
     answer_case = LLMTestCase(
         input=story_input,
@@ -742,75 +788,143 @@ def _run_deepeval_detailed(issue_key: str, mode: str) -> dict[str, Any]:
         }
     )
 
-    retrieval_context: list[str] = []
-    if mode == "enriched":
-        context_pkg = _load_context(issue_key)
-        if context_pkg is not None:
-            retrieval_context = _context_to_retrieval(context_pkg)
-            context_case = LLMTestCase(
-                input=story_input,
-                actual_output=actual_output,
-                retrieval_context=retrieval_context,
+    # ── Per-test Relevancy (single batched LLM call) ─────────────────────────
+    # All tests are scored in ONE LLM call by sending the story + all test
+    # titles/steps/expected results together and asking for a JSON array back.
+    # This avoids N×LLM overhead while still getting semantic relevancy
+    # (synonyms, intent, domain language) that keyword overlap cannot capture.
+    per_test_results: list[dict[str, Any]] = []
+    try:
+        # Build numbered test blocks
+        test_blocks: list[str] = []
+        for i, tc in enumerate(suite.tests):
+            steps_text = "\n".join(f"    {j+1}. {s}" for j, s in enumerate(tc.steps))
+            test_blocks.append(
+                f"Test {i+1}: {tc.title}\n"
+                f"  Steps:\n{steps_text}\n"
+                f"  Expected: {tc.expected_result}"
             )
-            context_metric = ContextualRelevancyMetric(
-                threshold=context_relevance_threshold,
-                model=judge,
-                include_reason=True,
-                verbose_mode=False,
-            )
-            context_metric.measure(context_case)
-            metrics.append(
+        tests_section = "\n\n".join(test_blocks)
+
+        batch_prompt = (
+            "You are a test quality judge. For each test case below, rate how relevant "
+            "it is to the user story on a scale from 0.0 to 1.0, where:\n"
+            "  1.0 = fully relevant (directly tests a stated requirement or AC)\n"
+            "  0.5 = partially relevant (loosely connected but not explicitly required)\n"
+            "  0.0 = not relevant (tests something outside the story scope)\n\n"
+            "USER STORY:\n"
+            f"{story_input}\n\n"
+            "TEST CASES:\n"
+            f"{tests_section}\n\n"
+            "Respond with a JSON array (no markdown, no extra text) with one object per "
+            "test in the same order. Each object must have exactly these keys:\n"
+            '  "index": integer (0-based),\n'
+            '  "score": float 0.0-1.0,\n'
+            '  "reason": one sentence explaining the score\n\n'
+            'Example: [{"index": 0, "score": 0.9, "reason": "..."}]'
+        )
+
+        raw_response, _cost = judge.generate(batch_prompt)
+        # Strip markdown fences if the model wraps the JSON
+        clean = str(raw_response).strip()
+        if clean.startswith("```"):
+            clean = clean.split("```")[1]
+            if clean.startswith("json"):
+                clean = clean[4:]
+        llm_scores: list[dict[str, Any]] = json.loads(clean.strip())
+
+        # Map results back; fall back gracefully if fewer items returned
+        score_map = {int(item["index"]): item for item in llm_scores}
+        for idx, tc in enumerate(suite.tests):
+            item = score_map.get(idx, {})
+            score = float(item.get("score", 0.5))
+            score = max(0.0, min(1.0, score))  # clamp to valid range
+            passed = score >= RELEVANCY_THRESHOLD
+            reason = str(item.get("reason", "No reason provided by judge."))
+            per_test_results.append(
                 {
-                    "name": "Context Relevance",
-                    "passed": bool(context_metric.success),
-                    "score": float(context_metric.score or 0.0),
-                    "threshold": context_relevance_threshold,
-                    "reason": context_metric.reason or "(no reason provided)",
+                    "test_index": idx,
+                    "title": tc.title,
+                    "score": round(score, 3),
+                    "passed": passed,
+                    "reason": reason,
+                }
+            )
+    except Exception as exc:  # pragma: no cover – LLM errors must not abort the run
+        for idx, tc in enumerate(suite.tests):
+            per_test_results.append(
+                {
+                    "test_index": idx,
+                    "title": tc.title,
+                    "score": 0.5,
+                    "passed": False,
+                    "reason": f"Batch relevancy evaluation failed: {exc}",
                 }
             )
 
-            faith_case = LLMTestCase(
-                input=story_input,
-                actual_output=actual_output,
-                retrieval_context=retrieval_context,
-            )
-            faith_metric = FaithfulnessMetric(
-                threshold=FAITHFULNESS_THRESHOLD,
-                model=judge,
-                include_reason=True,
-                verbose_mode=False,
-            )
-            faith_metric.measure(faith_case)
-            metrics.append(
-                {
-                    "name": "Faithfulness",
-                    "passed": bool(faith_metric.success),
-                    "score": float(faith_metric.score or 0.0),
-                    "threshold": FAITHFULNESS_THRESHOLD,
-                    "reason": faith_metric.reason or "(no reason provided)",
-                }
-            )
-        else:
-            metrics.append(
-                {
-                    "name": "Context Relevance",
-                    "passed": False,
-                    "score": 0.0,
-                    "threshold": context_relevance_threshold,
-                    "reason": f"No context file found for {issue_key}, so context relevance could not be evaluated.",
-                    "skipped": True,
-                }
-            )
-            metrics.append(
-                {
-                    "name": "Faithfulness",
-                    "passed": False,
-                    "score": 0.0,
-                    "threshold": FAITHFULNESS_THRESHOLD,
-                    "reason": f"No context file found for {issue_key}, so faithfulness could not be evaluated.",
-                    "skipped": True,
-                }
-            )
+    per_test_pass = sum(1 for r in per_test_results if r["passed"])
+    per_test_fail = len(per_test_results) - per_test_pass
+    avg_score = (
+        sum(r["score"] for r in per_test_results) / len(per_test_results)
+        if per_test_results else 0.0
+    )
+    per_test_report = {
+        "threshold": RELEVANCY_THRESHOLD,
+        "pass_count": per_test_pass,
+        "fail_count": per_test_fail,
+        "avg_score": round(avg_score, 3),
+        "results": per_test_results,
+    }
+
+    eval_elapsed = round(time.perf_counter() - eval_start, 3)
+
+    retrieval_context: list[str] = []
+    context_pkg = _load_context(issue_key)
+    if context_pkg is not None:
+        retrieval_context = _context_to_retrieval(context_pkg)
+        context_case = LLMTestCase(
+            input=story_input,
+            actual_output=actual_output,
+            retrieval_context=retrieval_context,
+        )
+        context_metric = ContextualRelevancyMetric(
+            threshold=context_relevance_threshold,
+            model=judge,
+            include_reason=True,
+            verbose_mode=False,
+        )
+        context_metric.measure(context_case)
+        metrics.append(
+            {
+                "name": "Context Relevance",
+                "passed": bool(context_metric.success),
+                "score": float(context_metric.score or 0.0),
+                "threshold": context_relevance_threshold,
+                "reason": context_metric.reason or "(no reason provided)",
+            }
+        )
+
+        faith_case = LLMTestCase(
+            input=story_input,
+            actual_output=actual_output,
+            retrieval_context=retrieval_context,
+        )
+        faith_metric = FaithfulnessMetric(
+            threshold=FAITHFULNESS_THRESHOLD,
+            model=judge,
+            include_reason=True,
+            verbose_mode=False,
+        )
+        faith_metric.measure(faith_case)
+        metrics.append(
+            {
+                "name": "Faithfulness",
+                "passed": bool(faith_metric.success),
+                "score": float(faith_metric.score or 0.0),
+                "threshold": FAITHFULNESS_THRESHOLD,
+                "reason": faith_metric.reason or "(no reason provided)",
+            }
+        )
     else:
         metrics.append(
             {
@@ -818,7 +932,17 @@ def _run_deepeval_detailed(issue_key: str, mode: str) -> dict[str, Any]:
                 "passed": False,
                 "score": 0.0,
                 "threshold": context_relevance_threshold,
-                "reason": "Context relevance is only available for suites evaluated with retrieval context.",
+                "reason": f"No context file found for {issue_key}, so context relevance could not be evaluated.",
+                "skipped": True,
+            }
+        )
+        metrics.append(
+            {
+                "name": "Faithfulness",
+                "passed": False,
+                "score": 0.0,
+                "threshold": FAITHFULNESS_THRESHOLD,
+                "reason": f"No context file found for {issue_key}, so faithfulness could not be evaluated.",
                 "skipped": True,
             }
         )
@@ -827,6 +951,8 @@ def _run_deepeval_detailed(issue_key: str, mode: str) -> dict[str, Any]:
         "passed": all(metric["passed"] for metric in metrics if not metric.get("skipped")),
         "judge_model": _JUDGE_MODEL_NAME,
         "metrics": metrics,
+        "per_test_relevancy": per_test_report,
+        "evaluation_seconds": eval_elapsed,
         "story_input": story_input,
         "actual_output": actual_output,
         "retrieval_context": retrieval_context,
@@ -838,7 +964,6 @@ def _build_issue_index() -> list[dict[str, Any]]:
     keys.update(_keys_from_files(RAW_STORY_DIR, "*.json"))
     keys.update(_keys_from_files(NORMALIZED_DIR, "*.json"))
     keys.update(_keys_from_files(CONTEXT_DIR, "*.json"))
-    keys.update(_keys_from_files(GENERATED_DIR, "*_baseline.json", suffix="_baseline"))
     keys.update(_keys_from_files(GENERATED_DIR, "*_enriched.json", suffix="_enriched"))
 
     indexed = []
@@ -850,7 +975,6 @@ def _build_issue_index() -> list[dict[str, Any]]:
                 "raw": (RAW_STORY_DIR / f"{key}.json").exists(),
                 "normalized": (NORMALIZED_DIR / f"{key}.json").exists(),
                 "context": (CONTEXT_DIR / f"{key}.json").exists(),
-                "baseline": (GENERATED_DIR / f"{key}_baseline.json").exists(),
                 "enriched": (GENERATED_DIR / f"{key}_enriched.json").exists(),
                 "last_updated": _format_mtime(latest_path) if latest_path else None,
                 "_sort_ts": latest_path.stat().st_mtime if latest_path else 0,
@@ -934,8 +1058,7 @@ def _normalize_issue_key(issue_key: str) -> str:
 
 
 def _normalize_mode(mode: str) -> str:
-    candidate = mode.strip().lower()
-    return candidate if candidate in {"baseline", "enriched"} else "baseline"
+    return "enriched"
 
 
 def _dependency_help(exc: ModuleNotFoundError) -> str:

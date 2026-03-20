@@ -1,0 +1,253 @@
+{
+  "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+  "id": "10058",
+  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10058",
+  "key": "AIP-11",
+  "fields": {
+    "customfield_10016": null,
+    "summary": "Chat disclaimer not visible on Safari",
+    "issuetype": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10003",
+      "id": "10003",
+      "description": "Bugs track problems or errors.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10679?size=medium",
+      "name": "Bug",
+      "subtask": false,
+      "avatarId": 10679,
+      "hierarchyLevel": 0
+    },
+    "components": [],
+    "subtasks": [],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 3
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Steps to Reproduce"
+            }
+          ]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Open chat widget in Safari."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Observe disclaimer area."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 3
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Expected"
+            }
+          ]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Security disclaimer is visible."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 3
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Actual"
+            }
+          ]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Disclaimer area is blank — no text rendered."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "issuelinks": [
+      {
+        "id": "10002",
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLink/10002",
+        "type": {
+          "id": "10003",
+          "name": "Relates",
+          "inward": "relates to",
+          "outward": "relates to",
+          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLinkType/10003"
+        },
+        "outwardIssue": {
+          "id": "10007",
+          "key": "AIP-2",
+          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10007",
+          "fields": {
+            "summary": "Customer Chat Warning Prompt",
+            "status": {
+              "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+              "description": "The work item is open and ready for the assignee to start work on it.",
+              "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+              "name": "Open",
+              "id": "1",
+              "statusCategory": {
+                "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+                "id": 2,
+                "key": "new",
+                "colorName": "blue-gray",
+                "name": "To Do"
+              }
+            },
+            "priority": {
+              "self": "https://tejasworkspace.atlassian.net/rest/api/3/priority/3",
+              "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/priorities/medium_new.svg",
+              "name": "Medium",
+              "id": "3"
+            },
+            "issuetype": {
+              "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10004",
+              "id": "10004",
+              "description": "A new feature of the product, which has yet to be developed.",
+              "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10680?size=medium",
+              "name": "New Feature",
+              "subtask": false,
+              "avatarId": 10680,
+              "hierarchyLevel": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "10003",
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLink/10003",
+        "type": {
+          "id": "10003",
+          "name": "Relates",
+          "inward": "relates to",
+          "outward": "relates to",
+          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issueLinkType/10003"
+        },
+        "outwardIssue": {
+          "id": "10045",
+          "key": "AIP-5",
+          "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10045",
+          "fields": {
+            "summary": "Verify disclaimer text content accuracy",
+            "status": {
+              "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+              "description": "The work item is open and ready for the assignee to start work on it.",
+              "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+              "name": "Open",
+              "id": "1",
+              "statusCategory": {
+                "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+                "id": 2,
+                "key": "new",
+                "colorName": "blue-gray",
+                "name": "To Do"
+              }
+            },
+            "priority": {
+              "self": "https://tejasworkspace.atlassian.net/rest/api/3/priority/3",
+              "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/priorities/medium_new.svg",
+              "name": "Medium",
+              "id": "3"
+            },
+            "issuetype": {
+              "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10012",
+              "id": "10012",
+              "description": "Test cases related to feature",
+              "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10570?size=medium",
+              "name": "TestCase",
+              "subtask": true,
+              "avatarId": 10570,
+              "hierarchyLevel": -1
+            }
+          }
+        }
+      }
+    ],
+    "customfield_10014": null,
+    "status": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+      "description": "The work item is open and ready for the assignee to start work on it.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+      "name": "Open",
+      "id": "1",
+      "statusCategory": {
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "auto-bug"
+    ]
+  }
+}

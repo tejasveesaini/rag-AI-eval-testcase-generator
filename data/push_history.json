@@ -1,0 +1,66 @@
+[
+  {
+    "issue_key": "AIP-13",
+    "mode": "enriched",
+    "timestamp": "2026-03-20T14:15:24",
+    "test_title": "Verify receipt of email confirmation upon completion of data deletion",
+    "jira_key": "AIP-25",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-25"
+  },
+  {
+    "issue_key": "AIP-13",
+    "mode": "enriched",
+    "timestamp": "2026-03-20T14:15:24",
+    "test_title": "Verify user cannot log in after account deletion is processed",
+    "jira_key": "AIP-24",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-24"
+  },
+  {
+    "issue_key": "AIP-13",
+    "mode": "enriched",
+    "timestamp": "2026-03-20T13:54:35",
+    "test_title": "Verify email confirmation is received upon completion of data deletion",
+    "jira_key": "AIP-23",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-23"
+  },
+  {
+    "issue_key": "AIP-13",
+    "mode": "enriched",
+    "timestamp": "2026-03-20T13:54:35",
+    "test_title": "Verify user account access is revoked after deletion processing",
+    "jira_key": "AIP-22",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-22"
+  },
+  {
+    "issue_key": "AIP-13",
+    "mode": "enriched",
+    "timestamp": "2026-03-20T13:47:18",
+    "test_title": "Verify user cannot log in after account deletion is processed",
+    "jira_key": "AIP-21",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-21"
+  },
+  {
+    "issue_key": "AIP-14",
+    "mode": "enriched",
+    "timestamp": "2026-03-16T17:37:14",
+    "test_title": "Verify loading indicator visibility during response generation",
+    "jira_key": "AIP-19",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-19"
+  },
+  {
+    "issue_key": "AIP-14",
+    "mode": "enriched",
+    "timestamp": "2026-03-16T11:14:47",
+    "test_title": "Verify timeout message and retry option when response exceeds 10 seconds",
+    "jira_key": "AIP-18",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-18"
+  },
+  {
+    "issue_key": "AIP-13",
+    "mode": "enriched",
+    "timestamp": "2026-03-13T15:25:47",
+    "test_title": "Verify confirmation dialog appears when requesting data deletion",
+    "jira_key": "AIP-17",
+    "url": "https://tejasworkspace.atlassian.net/browse/AIP-17"
+  }
+]

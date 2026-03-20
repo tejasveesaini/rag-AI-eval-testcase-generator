@@ -1,0 +1,24 @@
+{
+  "story_key": "AIP-14",
+  "linked_defects": [],
+  "historical_tests": [
+    {
+      "key": "AIP-18",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify timeout message and retry option when response exceeds 10 seconds",
+      "short_text": "User is in a chat session",
+      "relevance_hint": "linked issue"
+    },
+    {
+      "key": "AIP-19",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify loading indicator visibility during response generation",
+      "short_text": "User is in a chat session",
+      "relevance_hint": "linked issue"
+    }
+  ],
+  "related_stories": [],
+  "coverage_hints": []
+}

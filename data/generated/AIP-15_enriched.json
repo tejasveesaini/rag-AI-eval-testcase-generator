@@ -1,0 +1,87 @@
+{
+  "story_key": "AIP-15",
+  "tests": [
+    {
+      "title": "Resume a previous chat session and verify history loads",
+      "preconditions": [
+        "User has a previous chat session with at least 5 messages"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Click on a past session from the history list",
+        "Scroll through the chat window to the top"
+      ],
+      "expected_result": "The chat window displays all 5 previous messages in their original chronological order",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-15"
+    },
+    {
+      "title": "Verify AI response coherence in a resumed session",
+      "preconditions": [
+        "User has a previous chat session about 'vacation planning'"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Select the 'vacation planning' session",
+        "Type 'What was the first destination we discussed?' in the chat box",
+        "Click the send button"
+      ],
+      "expected_result": "The AI response identifies the specific destination mentioned in the earlier part of the conversation",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-3",
+      "source_story": "AIP-15"
+    },
+    {
+      "title": "Start a new chat session independently",
+      "preconditions": [
+        "User has existing chat sessions"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Click the button to start a brand-new chat",
+        "Type 'New conversation' and click send",
+        "View the list of past sessions"
+      ],
+      "expected_result": "A new chat window opens with no messages, and the previous session remains visible in the history sidebar",
+      "priority": "Medium",
+      "test_type": "Functional",
+      "coverage_tag": "AC-5",
+      "source_story": "AIP-15"
+    },
+    {
+      "title": "Attempt to resume a session when no history exists",
+      "preconditions": [
+        "User account has zero previous chat sessions"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Navigate to the past sessions selection area"
+      ],
+      "expected_result": "The interface displays a message that no history is available and no session links are present to select",
+      "priority": "Low",
+      "test_type": "Negative",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-15"
+    },
+    {
+      "title": "Resume a session that is exactly 30 days old",
+      "preconditions": [
+        "User has a chat session where the last message was sent 30 days ago"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Select the 30-day-old session from the list",
+        "Type a message and click send"
+      ],
+      "expected_result": "The chat window displays the previous history and the new message is visible in the conversation thread",
+      "priority": "Medium",
+      "test_type": "Edge Case",
+      "coverage_tag": "AC-4",
+      "source_story": "AIP-15"
+    }
+  ],
+  "notes": "Assumes a 'Past Sessions' or history list exists in the UI as implied by the ability to select sessions.\n\nINPUT WARNINGS:\n  \u2022 [input-guard:weak_context] Context package has 0 item(s) (minimum 1 for enriched mode to add value). Results may not differ from baseline generation."
+}

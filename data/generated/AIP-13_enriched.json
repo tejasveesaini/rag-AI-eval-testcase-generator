@@ -1,0 +1,88 @@
+{
+  "story_key": "AIP-13",
+  "tests": [
+    {
+      "title": "Verify user cannot log in after account deletion is processed",
+      "preconditions": [
+        "User has previously requested account deletion",
+        "The 30-day processing period has elapsed"
+      ],
+      "steps": [
+        "Navigate to the login page",
+        "Enter the credentials of the deleted account",
+        "Click the login button"
+      ],
+      "expected_result": "The system denies access and displays an authentication error message",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-4",
+      "source_story": "AIP-13"
+    },
+    {
+      "title": "Verify receipt of email confirmation upon completion of data deletion",
+      "preconditions": [
+        "User has requested account deletion",
+        "The 30-day processing period has elapsed"
+      ],
+      "steps": [
+        "Access the email inbox associated with the account",
+        "Search for a message from the system regarding account deletion"
+      ],
+      "expected_result": "An email confirmation stating that the deletion is complete is present in the inbox",
+      "priority": "High",
+      "test_type": "Integration",
+      "coverage_tag": "AC-3",
+      "source_story": "AIP-13"
+    },
+    {
+      "title": "Verify cancellation of data deletion request via confirmation dialog",
+      "preconditions": [
+        "User is logged in",
+        "User has initiated the data deletion request"
+      ],
+      "steps": [
+        "View the confirmation dialog",
+        "Click the cancel or close button on the dialog"
+      ],
+      "expected_result": "The dialog closes and no data deletion process is initiated",
+      "priority": "Medium",
+      "test_type": "Negative",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-13"
+    },
+    {
+      "title": "Verify data deletion request is not processed if user cancels before final confirmation",
+      "preconditions": [
+        "User is logged in"
+      ],
+      "steps": [
+        "Navigate to the account settings page",
+        "Click the delete account button",
+        "Close the browser tab or navigate away from the page while the confirmation dialog is visible"
+      ],
+      "expected_result": "The account remains active and no deletion process is triggered",
+      "priority": "Medium",
+      "test_type": "Negative",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-13"
+    },
+    {
+      "title": "Verify all personal data is removed after the 30-day processing period",
+      "preconditions": [
+        "User has confirmed the deletion request",
+        "30 days have passed since the request"
+      ],
+      "steps": [
+        "Attempt to access profile settings",
+        "Attempt to access conversation history",
+        "Attempt to access user preferences"
+      ],
+      "expected_result": "The system indicates that the account does not exist and no personal data is accessible",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-13"
+    }
+  ],
+  "notes": "Regression testing for AIP-20 is covered by the email confirmation test case."
+}

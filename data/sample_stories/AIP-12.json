@@ -1,0 +1,144 @@
+{
+  "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+  "id": "10091",
+  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10091",
+  "key": "AIP-12",
+  "fields": {
+    "customfield_10016": null,
+    "summary": "User can access their old conversations.",
+    "issuetype": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10004",
+      "id": "10004",
+      "description": "A new feature of the product, which has yet to be developed.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10680?size=medium",
+      "name": "New Feature",
+      "subtask": false,
+      "avatarId": 10680,
+      "hierarchyLevel": 0
+    },
+    "components": [],
+    "subtasks": [],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "As a user, I want to be able to view my previous conversations so that I can refer back to past interactions without losing context."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 3
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Acceptance Criteria"
+            }
+          ]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Given I am logged in, when I navigate to the conversations section, then I see a chronological list of all my past conversations."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Each conversation entry shows the date, time, and a short preview of the last message."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Clicking a conversation opens the full message history in read-only mode."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Conversations are retained for at least 90 days from the last message."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "If I have no previous conversations, an appropriate empty-state message is shown."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "issuelinks": [],
+    "customfield_10014": null,
+    "status": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+      "description": "The work item is open and ready for the assignee to start work on it.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+      "name": "Open",
+      "id": "1",
+      "statusCategory": {
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "conversations",
+      "history"
+    ]
+  }
+}

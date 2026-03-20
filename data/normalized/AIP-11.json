@@ -1,0 +1,22 @@
+{
+  "issue_key": "AIP-11",
+  "summary": "Chat disclaimer not visible on Safari",
+  "description": "Steps to Reproduce\nOpen chat widget in Safari.\n\nObserve disclaimer area.\n\n\nExpected\nSecurity disclaimer is visible.\n\n\nActual\nDisclaimer area is blank — no text rendered.",
+  "acceptance_criteria": null,
+  "labels": [
+    "auto-bug"
+  ],
+  "components": [],
+  "linked_issues": [
+    {
+      "key": "AIP-2",
+      "issue_type": "New Feature",
+      "summary": "Customer Chat Warning Prompt"
+    },
+    {
+      "key": "AIP-5",
+      "issue_type": "TestCase",
+      "summary": "Verify disclaimer text content accuracy"
+    }
+  ]
+}

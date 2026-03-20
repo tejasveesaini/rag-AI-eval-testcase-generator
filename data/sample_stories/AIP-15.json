@@ -1,0 +1,144 @@
+{
+  "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+  "id": "10094",
+  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10094",
+  "key": "AIP-15",
+  "fields": {
+    "customfield_10016": null,
+    "summary": "User should be able to continue their existing chats.",
+    "issuetype": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10004",
+      "id": "10004",
+      "description": "A new feature of the product, which has yet to be developed.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10680?size=medium",
+      "name": "New Feature",
+      "subtask": false,
+      "avatarId": 10680,
+      "hierarchyLevel": 0
+    },
+    "components": [],
+    "subtasks": [],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "As a user, I want to resume any of my previous chat sessions so that I can continue conversations where I left off."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 3
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Acceptance Criteria"
+            }
+          ]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Given I have one or more previous chat sessions, when I open the chat interface, I can select any past session to resume it."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Resuming a session loads the full prior message history and allows me to send new messages."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "The AI model receives the prior context so its responses are coherent with earlier exchanges."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Sessions are resumable for at least 30 days after the last message."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "I can start a brand-new chat at any time without affecting my existing sessions."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "issuelinks": [],
+    "customfield_10014": null,
+    "status": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+      "description": "The work item is open and ready for the assignee to start work on it.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+      "name": "Open",
+      "id": "1",
+      "statusCategory": {
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "chat",
+      "continuity"
+    ]
+  }
+}

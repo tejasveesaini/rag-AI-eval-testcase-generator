@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RAG AI Eval Workflow UI</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -23,9 +24,9 @@
         <div class="workspace-actions">
           <div class="issue-form issue-form-inline">
             <label for="issueKeyInput">Story/Feature ID</label>
-            <input id="issueKeyInput" type="text" placeholder="AIP-2" value="AIP-2">
+            <input id="issueKeyInput" type="text" placeholder="Enter Story ID" value="">
             <button id="loadIssueButton" class="button button-primary">
-              <span>Load</span>
+              <span>Load Story</span>
             </button>
           </div>
         </div>
@@ -202,10 +203,6 @@
           </div>
         </div>
 
-        <div id="suiteSummary" class="summary-surface empty-state">
-          No suite selected yet.
-        </div>
-
         <div class="tests-subtabbar" id="testsSubtabbar">
           <button class="tests-subtab active" data-tests-tab="generated">Generated</button>
           <button class="tests-subtab" data-tests-tab="existing">Existing</button>
@@ -226,6 +223,10 @@
             <div class="empty-state">No existing story tests found.</div>
           </div>
         </section>
+
+        <div id="suiteSummary" class="summary-surface empty-state">
+          No suite selected yet.
+        </div>
       </section>
 
       <section id="evaluateTab" class="workspace-tab">
@@ -250,7 +251,41 @@
         <div id="evaluationSummary" class="summary-surface empty-state">
           Run evaluation to inspect DeepEval metrics and context relevance.
         </div>
+
+        <!-- Latency strip -->
+        <div id="latencyStrip" class="latency-strip" hidden></div>
+
+        <!-- Suite-level DeepEval metrics -->
         <div id="deepEvalMetrics" class="metric-list"></div>
+
+        <!-- Per-test relevancy breakdown -->
+        <div id="perTestRelevancy" class="eval-section" hidden>
+          <div class="eval-section-head">
+            <h3>Per-test Relevancy</h3>
+            <p class="eval-section-meta" id="perTestRelevancyMeta"></p>
+          </div>
+          <div id="perTestRelevancyList" class="per-test-list"></div>
+        </div>
+
+        <!-- AC Coverage report -->
+        <div id="acCoverageSection" class="eval-section" hidden>
+          <div class="eval-section-head">
+            <h3>AC Coverage</h3>
+            <p class="eval-section-meta" id="acCoverageMeta"></p>
+          </div>
+          <div id="acCoverageList" class="ac-coverage-list"></div>
+          <div id="phantomCallout" class="phantom-callout" hidden></div>
+        </div>
+
+        <!-- Hallucination report -->
+        <div id="hallucinationSection" class="eval-section" hidden>
+          <div class="eval-section-head">
+            <h3>Hallucinated Specific Values</h3>
+            <p class="eval-section-meta" id="hallucinationMeta"></p>
+          </div>
+          <div id="hallucinationList" class="hallucination-list"></div>
+        </div>
+
         <div id="evaluationContext" class="evaluation-context"></div>
       </section>
 
@@ -288,7 +323,8 @@
       <p id="pushSuccessMessage" class="modal-copy">The selected test cases were pushed successfully.</p>
       <div class="modal-actions">
         <button id="closePushSuccessModal" class="button button-secondary">Later</button>
-        <a id="openStoryInJiraLink" class="button button-primary" href="#" target="_blank" rel="noopener noreferrer">Open Story in Jira</a>
+        <a id="openStoryInJiraLink" class="button button-primary" href="#" target="_blank"
+          rel="noopener noreferrer">Open Story in Jira</a>
       </div>
     </div>
   </div>

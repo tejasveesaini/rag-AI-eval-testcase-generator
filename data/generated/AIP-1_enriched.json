@@ -1,0 +1,87 @@
+{
+  "story_key": "AIP-1",
+  "tests": [
+    {
+      "title": "Mask credit card numbers in chat input",
+      "preconditions": [
+        "The user is logged into the chat application"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Type a 16-digit credit card number into the input field",
+        "Press the \"send\" button"
+      ],
+      "expected_result": "The message is displayed in the chat window with the credit card number replaced by [REDACTED]",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-1"
+    },
+    {
+      "title": "Mask bank account numbers in chat input",
+      "preconditions": [
+        "The user is logged into the chat application"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Type a bank account number into the input field",
+        "Press the \"send\" button"
+      ],
+      "expected_result": "The message is displayed in the chat window with the bank account number replaced by [REDACTED]",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-1"
+    },
+    {
+      "title": "Ensure non-financial numeric strings are not masked",
+      "preconditions": [
+        "The user is logged into the chat application"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Type a 10-digit phone number \"555-010-9999\" into the input field",
+        "Press the \"send\" button"
+      ],
+      "expected_result": "The phone number is displayed and stored in its raw, unmasked format",
+      "priority": "Medium",
+      "test_type": "Negative",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-1"
+    },
+    {
+      "title": "Mask multiple financial data patterns in a single message",
+      "preconditions": [
+        "The user is logged into the chat application"
+      ],
+      "steps": [
+        "Open the chat interface",
+        "Type a message containing both a credit card number and a routing number",
+        "Press the \"send\" button"
+      ],
+      "expected_result": "The message is displayed with both the credit card number and the routing number replaced by [REDACTED]",
+      "priority": "Medium",
+      "test_type": "Edge Case",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-1"
+    },
+    {
+      "title": "Verify raw financial data is not stored in backend logs or databases",
+      "preconditions": [
+        "The user has access to backend logs and the RAG system database"
+      ],
+      "steps": [
+        "Type a credit card number into the chat",
+        "Press the \"send\" button",
+        "Query the RAG system storage for the raw credit card number",
+        "Search the system logs for the raw credit card number"
+      ],
+      "expected_result": "The raw credit card number is not found in the RAG system storage or the system logs",
+      "priority": "High",
+      "test_type": "Integration",
+      "coverage_tag": "AC-3",
+      "source_story": "AIP-1"
+    }
+  ],
+  "notes": "The story does not define the specific numeric patterns for bank accounts or routing numbers.\n\nINPUT WARNINGS:\n  \u2022 [input-guard:weak_context] Context package has 0 item(s) (minimum 1 for enriched mode to add value). Results may not differ from baseline generation."
+}

@@ -53,13 +53,20 @@ from src.models.schemas import (
 
 logger = logging.getLogger(__name__)
 
-# Model to use — confirmed available via API
-_MODEL = "gemini-3-flash-preview"
+# Model to use — gemini-3.1-flash-lite-preview: fast, low-cost, and aligned
+# with the evaluator so generation and judgment use the same model family.
+# The API supports much larger output limits, but 8192 is a deliberate request
+# cap that is sufficient for a 5-test JSON suite while keeping responses tight.
+_MODEL = "gemini-3.1-flash-lite-preview"
 _MODEL_TIMEOUT_MS = 120_000
 
 # Strip markdown code fences if Gemini wraps output despite instructions
 _CODE_FENCE_RE = re.compile(r"```(?:json)?\s*([\s\S]*?)\s*```")
 _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
+# Matches unquoted object keys: word chars at the start of a JSON "property" slot
+_UNQUOTED_KEY_RE = re.compile(r'(?<=[{,])\s*([A-Za-z_]\w*)\s*:')
+# Matches single-quoted strings (non-escaped apostrophes not inside double-quoted context)
+_SINGLE_QUOTE_STR_RE = re.compile(r"'((?:[^'\\]|\\.)*)'")
 
 
 def _extract_json_object(text: str) -> str:
@@ -71,41 +78,252 @@ def _extract_json_object(text: str) -> str:
     return text[start : end + 1]
 
 
+def _strip_control_chars(text: str) -> str:
+    """Remove ASCII control characters (except tab/newline/CR) that break JSON parsers."""
+    return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+
+
 def _repair_json_like_text(text: str) -> str:
     """Apply small, safe repairs for common model formatting defects."""
     cleaned = text.strip().replace("\ufeff", "")
     cleaned = _extract_json_object(cleaned)
     cleaned = _TRAILING_COMMA_RE.sub(r"\1", cleaned)
+    cleaned = _strip_control_chars(cleaned)
     return cleaned
 
 
+def _fix_unescaped_quotes_in_strings(text: str) -> str:
+    """Walk the JSON character by character and escape any bare double-quotes
+    that appear *inside* a string value (i.e. not as structural delimiters).
+
+    This is the most common cause of "Expecting property name enclosed in double
+    quotes" errors: a string value like ``"say "hello""`` that the model forgot
+    to escape.  A regex cannot distinguish structural from content quotes, but a
+    state machine can.
+    """
+    out: list[str] = []
+    i = 0
+    n = len(text)
+    in_string = False
+    # Track whether the current position is at a structural context where a `"`
+    # is expected to be an opening delimiter (i.e. we just saw `:`, `,`, `[`, `{`
+    # optionally followed by whitespace).
+    after_structural = True  # start of document is a structural position
+
+    while i < n:
+        ch = text[i]
+
+        if ch == '\\' and in_string:
+            # Escape sequence — copy both the backslash and the next char verbatim
+            out.append(ch)
+            i += 1
+            if i < n:
+                out.append(text[i])
+                i += 1
+            continue
+
+        if ch == '"':
+            if not in_string:
+                if after_structural:
+                    # This is a legitimate string-opening quote
+                    in_string = True
+                    after_structural = False
+                    out.append(ch)
+                else:
+                    # Bare `"` at a non-structural position — treat as a content
+                    # quote that should have been escaped
+                    out.append('\\"')
+            else:
+                # We're in a string — this could be:
+                #   a) the closing delimiter, or
+                #   b) an unescaped content quote
+                # Heuristic: peek ahead past whitespace; if the next non-ws
+                # char is `:`, `,`, `}`, `]` or end-of-input, treat as closing.
+                j = i + 1
+                while j < n and text[j] in ' \t\r\n':
+                    j += 1
+                next_ch = text[j] if j < n else ''
+                if next_ch in (':', ',', '}', ']', ''):
+                    # Closing delimiter
+                    in_string = False
+                    after_structural = next_ch in (',', ':', '[', '{')
+                    out.append(ch)
+                else:
+                    # Content quote — escape it
+                    out.append('\\"')
+            i += 1
+            continue
+
+        # Track structural positions outside strings
+        if not in_string:
+            if ch in (':', ',', '[', '{'):
+                after_structural = True
+            elif ch not in (' ', '\t', '\r', '\n'):
+                after_structural = False
+
+        out.append(ch)
+        i += 1
+
+    return ''.join(out)
+
+
+def _repair_json_aggressively(text: str) -> str:
+    """Heavier repairs: unquoted keys, single-quoted strings, control chars.
+
+    Applied only when the lightweight repair + YAML fallback both fail.
+    Each transform is order-sensitive:
+      1. Strip control characters first (they confuse all later regexes).
+      2. Fix unescaped double-quotes inside string values.
+      3. Replace single-quoted strings with double-quoted equivalents.
+      4. Quote unquoted object keys.
+      5. Re-strip trailing commas (single-quote replacement can introduce them).
+    """
+    out = _strip_control_chars(text.strip().replace("\ufeff", ""))
+    out = _extract_json_object(out)
+
+    # Fix unescaped double-quotes inside string values first (most common cause
+    # of "Expecting property name enclosed in double quotes" at mid-body positions)
+    out = _fix_unescaped_quotes_in_strings(out)
+
+    # Replace 'single quoted' → "double quoted" strings.
+    # Only replace where we're clearly not inside an already-double-quoted string
+    # (this regex is a best-effort heuristic, not a full parser).
+    def _sq_to_dq(m: re.Match) -> str:
+        inner = m.group(1).replace('"', '\\"')
+        return f'"{inner}"'
+    out = _SINGLE_QUOTE_STR_RE.sub(_sq_to_dq, out)
+
+    # Quote unquoted object keys
+    out = _UNQUOTED_KEY_RE.sub(lambda m: m.group(0).replace(m.group(1), f'"{m.group(1)}"'), out)
+
+    # Final trailing-comma pass
+    out = _TRAILING_COMMA_RE.sub(r"\1", out)
+    return out
+
+
 def _load_json_like(text: str) -> dict:
-    """Parse strict JSON first, then fall back to YAML for near-JSON output."""
+    """Parse strict JSON first, then escalate through progressively heavier repairs."""
+    # ── Pass 1: strict JSON ───────────────────────────────────────────────────
     try:
         return json.loads(text)
     except json.JSONDecodeError as json_error:
-        repaired = _repair_json_like_text(text)
-        if repaired != text:
-            try:
-                logger.warning("Gemini returned malformed JSON; applying lightweight repair before parsing.")
-                return json.loads(repaired)
-            except json.JSONDecodeError:
-                pass
+        pass
 
+    # ── Pass 2: lightweight repair (trim noise, trailing commas, BOM) ────────
+    repaired = _repair_json_like_text(text)
+    try:
+        logger.warning("Gemini returned malformed JSON; applying lightweight repair.")
+        return json.loads(repaired)
+    except json.JSONDecodeError:
+        pass
+
+    # ── Pass 3: YAML (handles unquoted keys, single quotes, comments) ────────
+    try:
+        import yaml
+        loaded = yaml.safe_load(repaired)
+        if isinstance(loaded, dict):
+            logger.warning("Gemini returned malformed JSON; recovered via YAML parser.")
+            return loaded
+    except Exception:
+        pass
+
+    # ── Pass 4: fix unescaped double-quotes inside string values ─────────────
+    quote_fixed = _fix_unescaped_quotes_in_strings(repaired)
+    if quote_fixed != repaired:
         try:
-            import yaml
-        except ModuleNotFoundError as exc:
-            raise json_error from exc
+            logger.warning("Gemini returned malformed JSON; fixed unescaped quotes in strings.")
+            return json.loads(quote_fixed)
+        except json.JSONDecodeError:
+            pass
 
-        try:
-            loaded = yaml.safe_load(repaired)
-        except Exception as yaml_error:
-            raise json_error from yaml_error
+    # ── Pass 5: aggressive char-level repair ─────────────────────────────────
+    aggressively_repaired = _repair_json_aggressively(text)
+    try:
+        logger.warning("Gemini returned malformed JSON; applying aggressive repair.")
+        return json.loads(aggressively_repaired)
+    except json.JSONDecodeError:
+        pass
 
-        if not isinstance(loaded, dict):
-            raise json_error
-        logger.warning("Gemini returned malformed JSON; recovered by parsing repaired output as YAML.")
-        return loaded
+    # ── Pass 6: YAML on aggressive repair ────────────────────────────────────
+    try:
+        import yaml
+        loaded = yaml.safe_load(aggressively_repaired)
+        if isinstance(loaded, dict):
+            logger.warning("Gemini returned malformed JSON; recovered via YAML on aggressively-repaired text.")
+            return loaded
+    except Exception:
+        pass
+
+    # All passes exhausted — raise the original error
+    raise json.JSONDecodeError(
+        "All JSON repair passes failed",
+        text,
+        0,
+    )
+
+
+def _recover_truncated_tests(text: str) -> dict | None:
+    """Last-resort recovery for truncated JSON: extract all complete test objects.
+
+    When the model hits the output token limit mid-string the closing braces are
+    missing.  This function finds every fully-closed ``{...}`` block inside the
+    ``"tests"`` array and rebuilds a minimal valid JSON document from them so the
+    caller gets *some* tests rather than a hard failure.
+
+    Returns a dict on success, or None if no complete test could be extracted.
+    """
+    # Locate the opening of the tests array
+    tests_start = text.find('"tests"')
+    if tests_start == -1:
+        return None
+    bracket = text.find("[", tests_start)
+    if bracket == -1:
+        return None
+
+    # Walk the array character by character, collecting complete objects
+    complete_objects: list[str] = []
+    depth = 0
+    obj_start: int | None = None
+    i = bracket + 1
+    in_string = False
+    escape_next = False
+
+    while i < len(text):
+        ch = text[i]
+        if escape_next:
+            escape_next = False
+            i += 1
+            continue
+        if ch == "\\" and in_string:
+            escape_next = True
+            i += 1
+            continue
+        if ch == '"':
+            in_string = not in_string
+        if not in_string:
+            if ch == "{":
+                if depth == 0:
+                    obj_start = i
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0 and obj_start is not None:
+                    complete_objects.append(text[obj_start : i + 1])
+                    obj_start = None
+        i += 1
+
+    if not complete_objects:
+        return None
+
+    # Rebuild a minimal valid JSON document
+    story_key_match = re.search(r'"story_key"\s*:\s*"([^"]+)"', text)
+    story_key = story_key_match.group(1) if story_key_match else "UNKNOWN"
+    joined = ",\n".join(complete_objects)
+    recovered = f'{{"story_key": "{story_key}", "tests": [{joined}], "notes": "⚠ Output was truncated; {len(complete_objects)} complete test(s) recovered."}}'
+    try:
+        return json.loads(recovered)
+    except json.JSONDecodeError:
+        return None
 
 
 def _parse_suite(raw_text: str, issue_key: str) -> GeneratedTestSuite:
@@ -120,11 +338,20 @@ def _parse_suite(raw_text: str, issue_key: str) -> GeneratedTestSuite:
     try:
         data = _load_json_like(text)
     except json.JSONDecodeError as e:
-        raise ValueError(
-            f"Gemini returned non-JSON output.\n"
-            f"Parse error: {e}\n"
-            f"Raw output (first 500 chars):\n{raw_text[:500]}"
-        )
+        # Attempt to salvage complete test objects from a truncated response
+        recovered = _recover_truncated_tests(text)
+        if recovered:
+            logger.warning(
+                "Gemini output was truncated; recovered %d complete test(s) from partial JSON.",
+                len(recovered.get("tests", [])),
+            )
+            data = recovered
+        else:
+            raise ValueError(
+                f"Gemini returned non-JSON output.\n"
+                f"Parse error: {e}\n"
+                f"Raw output (first 500 chars):\n{raw_text[:500]}"
+            )
     except Exception as e:
         raise ValueError(
             f"Gemini returned malformed structured output that could not be repaired.\n"
@@ -231,7 +458,7 @@ def _merge_discovery_into_package(
 
 def generate_test_suite(
     story: StoryContext,
-    max_tests: int = 10,
+    max_tests: int = 5,
     context: ContextPackage | None = None,
     run_discovery: bool = False,
     excluded_titles: list[str] | None = None,
@@ -333,8 +560,8 @@ def generate_test_suite(
             model=_MODEL,
             contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=0.2,         # low temperature = more deterministic output
-                max_output_tokens=16384, # thinking tokens consume ~8k; need 16k headroom
+                temperature=0.2,        # low temperature = more deterministic output
+                max_output_tokens=8192, # deliberate request cap; keeps JSON output bounded
             ),
         )
     except Exception as exc:

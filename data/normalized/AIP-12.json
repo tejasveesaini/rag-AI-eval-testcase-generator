@@ -1,0 +1,12 @@
+{
+  "issue_key": "AIP-12",
+  "summary": "User can access their old conversations.",
+  "description": "As a user, I want to be able to view my previous conversations so that I can refer back to past interactions without losing context.\nAcceptance Criteria\nGiven I am logged in, when I navigate to the conversations section, then I see a chronological list of all my past conversations.\n\nEach conversation entry shows the date, time, and a short preview of the last message.\n\nClicking a conversation opens the full message history in read-only mode.\n\nConversations are retained for at least 90 days from the last message.\n\nIf I have no previous conversations, an appropriate empty-state message is shown.",
+  "acceptance_criteria": null,
+  "labels": [
+    "conversations",
+    "history"
+  ],
+  "components": [],
+  "linked_issues": []
+}

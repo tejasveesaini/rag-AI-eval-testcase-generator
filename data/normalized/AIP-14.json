@@ -1,0 +1,24 @@
+{
+  "issue_key": "AIP-14",
+  "summary": "The response time on chat should never be more than 10 seconds.",
+  "description": "As a user, I expect every chat response to be delivered within 10 seconds so that the experience remains responsive and usable.\nAcceptance Criteria\nGiven I send a message, the first token of the AI response must appear within 10 seconds under normal network conditions (< 100 ms RTT).\n\nA visible loading indicator is shown while a response is being generated.\n\nIf the 10-second threshold is exceeded, the user sees a clear timeout message with a retry option.\n\nP95 end-to-end response latency is ≤ 10 seconds as measured in production monitoring.\n\nThe SLA applies to all chat entry points (web, mobile, embedded widget).",
+  "acceptance_criteria": null,
+  "labels": [
+    "chat",
+    "performance",
+    "sla"
+  ],
+  "components": [],
+  "linked_issues": [
+    {
+      "key": "AIP-18",
+      "issue_type": "TestCase",
+      "summary": "Verify timeout message and retry option when response exceeds 10 seconds"
+    },
+    {
+      "key": "AIP-19",
+      "issue_type": "TestCase",
+      "summary": "Verify loading indicator visibility during response generation"
+    }
+  ]
+}

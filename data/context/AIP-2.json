@@ -18,7 +18,40 @@
       "relevance_hint": "linked issue"
     }
   ],
-  "historical_tests": [],
+  "historical_tests": [
+    {
+      "key": "AIP-4",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify security disclaimer appears on chat initialization",
+      "short_text": "User is on a page with the chat widget enabled",
+      "relevance_hint": "linked issue"
+    },
+    {
+      "key": "AIP-5",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify disclaimer text content accuracy",
+      "short_text": "Read the text of the displayed security warning message.",
+      "relevance_hint": "linked issue"
+    },
+    {
+      "key": "AIP-6",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify disclaimer placement and visibility",
+      "short_text": "Locate the text input box at the bottom of the chat window.",
+      "relevance_hint": "linked issue"
+    },
+    {
+      "key": "AIP-7",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify warning message is not hidden by input focus",
+      "short_text": "Security disclaimer is visible",
+      "relevance_hint": "linked issue"
+    }
+  ],
   "related_stories": [],
   "coverage_hints": [
     "Known linked defects for this story: AIP-10, AIP-11 — consider regression and negative tests"

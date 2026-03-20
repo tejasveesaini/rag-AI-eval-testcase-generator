@@ -1,0 +1,27 @@
+{
+  "story_key": "AIP-13",
+  "linked_defects": [
+    {
+      "key": "AIP-20",
+      "issue_type": "Bug",
+      "category": "bug",
+      "summary": "User doesn't get email confirmation",
+      "short_text": "Request the data deletion.",
+      "relevance_hint": "linked issue"
+    }
+  ],
+  "historical_tests": [
+    {
+      "key": "AIP-17",
+      "issue_type": "TestCase",
+      "category": "test",
+      "summary": "Verify confirmation dialog appears when requesting data deletion",
+      "short_text": "User is logged into the application",
+      "relevance_hint": "linked issue"
+    }
+  ],
+  "related_stories": [],
+  "coverage_hints": [
+    "Known linked defects for this story: AIP-20 — consider regression and negative tests"
+  ]
+}

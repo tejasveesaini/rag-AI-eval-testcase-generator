@@ -1,0 +1,92 @@
+[
+  {
+    "doc_id": "AIP-2#story",
+    "source_type": "story",
+    "source_key": "AIP-2",
+    "title": "Customer Chat Warning Prompt",
+    "body": "Customer Chat Warning Prompt | As a customer using the chat, | A brief disclaimer (e.g., \"For your security, please do not share credit card numbers, bank details, or other financial data in this chat.\") appears w",
+    "components": [],
+    "labels": [],
+    "feature_area": null
+  },
+  {
+    "doc_id": "AIP-10#bug",
+    "source_type": "bug",
+    "source_key": "AIP-10",
+    "title": "Chat input allows forbidden characters",
+    "body": "Chat input allows forbidden characters | Click inside the chat input.",
+    "components": [],
+    "labels": [],
+    "feature_area": null
+  },
+  {
+    "doc_id": "AIP-11#bug",
+    "source_type": "bug",
+    "source_key": "AIP-11",
+    "title": "Chat disclaimer not visible on Safari",
+    "body": "Chat disclaimer not visible on Safari | Open chat widget in Safari.",
+    "components": [],
+    "labels": [],
+    "feature_area": null
+  },
+  {
+    "doc_id": "AIP-2#historical_test#0",
+    "source_type": "historical_test",
+    "source_key": "AIP-2",
+    "title": "Verify the security disclaimer is displayed upon opening the chat window",
+    "body": "Verify the security disclaimer is displayed upon opening the chat window | A brief disclaimer warning against sharing credit card numbers, bank details, or financial data is visible.",
+    "components": [],
+    "labels": [],
+    "feature_area": "AC-1"
+  },
+  {
+    "doc_id": "AIP-2#historical_test#1",
+    "source_type": "historical_test",
+    "source_key": "AIP-2",
+    "title": "Verify the chat disclaimer is visible and rendered correctly on Safari",
+    "body": "Verify the chat disclaimer is visible and rendered correctly on Safari | The security disclaimer is clearly visible and not obscured or missing in the Safari browser interface.",
+    "components": [],
+    "labels": [],
+    "feature_area": "AC-2"
+  },
+  {
+    "doc_id": "AIP-2#historical_test#2",
+    "source_type": "historical_test",
+    "source_key": "AIP-2",
+    "title": "Verify the disclaimer is present before any user input is entered",
+    "body": "Verify the disclaimer is present before any user input is entered | The warning message is displayed to the user before they have the opportunity to start typing.",
+    "components": [],
+    "labels": [],
+    "feature_area": "AC-1"
+  },
+  {
+    "doc_id": "AIP-2#historical_test#3",
+    "source_type": "historical_test",
+    "source_key": "AIP-2",
+    "title": "Verify the disclaimer remains visible when forbidden characters are typed",
+    "body": "Verify the disclaimer remains visible when forbidden characters are typed | The disclaimer remains visible and its layout is not affected by the input of forbidden characters.",
+    "components": [],
+    "labels": [],
+    "feature_area": "AC-1"
+  },
+  {
+    "doc_id": "AIP-2#historical_test#4",
+    "source_type": "historical_test",
+    "source_key": "AIP-2",
+    "title": "Verify the placement of the disclaimer message matches requirements",
+    "body": "Verify the placement of the disclaimer message matches requirements | The message is highly visible and correctly positioned according to the specified placement options.",
+    "components": [],
+    "labels": [],
+    "feature_area": "AC-2"
+  },
+  {
+    "doc_id": "AIP-2#qa_note#0",
+    "source_type": "qa_note",
+    "source_key": "AIP-2",
+    "title": "Known linked defects for this story: AIP-10, AIP-11 \u2014 consider regression and ne",
+    "body": "Known linked defects for this story: AIP-10, AIP-11 \u2014 consider regression and negative tests",
+    "components": [],
+    "labels": [],
+    "feature_area": null
+  }
+]

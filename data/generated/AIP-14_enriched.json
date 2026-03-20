@@ -1,0 +1,87 @@
+{
+  "story_key": "AIP-14",
+  "tests": [
+    {
+      "title": "Verify first token delivery time under normal network conditions",
+      "preconditions": [
+        "User is logged into the chat interface",
+        "Network RTT is confirmed to be less than 100ms"
+      ],
+      "steps": [
+        "Open the network monitoring tool to track packet transmission",
+        "Send a message in the chat",
+        "Measure the time elapsed from the message send action until the first token of the AI response appears"
+      ],
+      "expected_result": "The first token of the AI response appears within 10 seconds of the message being sent.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-14"
+    },
+    {
+      "title": "Verify response time SLA across multiple chat entry points",
+      "preconditions": [
+        "User has access to web, mobile, and embedded widget chat entry points"
+      ],
+      "steps": [
+        "Access the chat via the web interface and send a message",
+        "Access the chat via the mobile interface and send a message",
+        "Access the chat via the embedded widget and send a message"
+      ],
+      "expected_result": "The first token of the AI response appears within 10 seconds for all three entry points.",
+      "priority": "High",
+      "test_type": "Integration",
+      "coverage_tag": "AC-5",
+      "source_story": "AIP-14"
+    },
+    {
+      "title": "Verify system behavior when network latency exceeds normal conditions",
+      "preconditions": [
+        "User is in a chat session",
+        "Network RTT is simulated to be significantly higher than 100ms"
+      ],
+      "steps": [
+        "Throttle the network connection to simulate high latency",
+        "Send a message in the chat"
+      ],
+      "expected_result": "The system fails to deliver the first token within 10 seconds and displays the timeout message with a retry option.",
+      "priority": "Medium",
+      "test_type": "Negative",
+      "coverage_tag": "AC-3",
+      "source_story": "AIP-14"
+    },
+    {
+      "title": "Verify P95 latency compliance in production monitoring",
+      "preconditions": [
+        "Access to production monitoring dashboard",
+        "Sufficient volume of chat traffic has occurred"
+      ],
+      "steps": [
+        "Navigate to the production monitoring dashboard",
+        "Filter the latency metrics for the chat service",
+        "Review the P95 end-to-end response latency metric"
+      ],
+      "expected_result": "The P95 end-to-end response latency value is 10 seconds or less.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-4",
+      "source_story": "AIP-14"
+    },
+    {
+      "title": "Verify system recovery after timeout using retry option",
+      "preconditions": [
+        "User has received a timeout message due to a previous slow response"
+      ],
+      "steps": [
+        "Observe the timeout message on the chat screen",
+        "Click the retry option provided in the timeout message"
+      ],
+      "expected_result": "The chat system re-sends the message and attempts to generate a new response.",
+      "priority": "Medium",
+      "test_type": "Functional",
+      "coverage_tag": "AC-3",
+      "source_story": "AIP-14"
+    }
+  ],
+  "notes": ""
+}

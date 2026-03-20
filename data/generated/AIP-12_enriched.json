@@ -1,0 +1,100 @@
+{
+  "story_key": "AIP-12",
+  "tests": [
+    {
+      "title": "Verify chronological display of past conversations",
+      "preconditions": [
+        "User has multiple past conversations across different dates"
+      ],
+      "steps": [
+        "Log in to the application.",
+        "Navigate to the conversations section."
+      ],
+      "expected_result": "A list of all past conversations is displayed, ordered by the date and time of the last message.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-1",
+      "source_story": "AIP-12"
+    },
+    {
+      "title": "Verify conversation entry metadata display",
+      "preconditions": [
+        "User has at least one past conversation"
+      ],
+      "steps": [
+        "Log in to the application.",
+        "Navigate to the conversations section.",
+        "Observe the details of a single conversation entry in the list."
+      ],
+      "expected_result": "The entry displays the specific date, the time, and a short text preview of the last message sent in that conversation.",
+      "priority": "Medium",
+      "test_type": "Functional",
+      "coverage_tag": "AC-2",
+      "source_story": "AIP-12"
+    },
+    {
+      "title": "Verify full message history opens in read-only mode",
+      "preconditions": [
+        "User has at least one past conversation"
+      ],
+      "steps": [
+        "Log in to the application.",
+        "Navigate to the conversations section.",
+        "Click on a specific conversation entry."
+      ],
+      "expected_result": "The full message history for the selected conversation is displayed and no text input fields or send buttons are visible.",
+      "priority": "High",
+      "test_type": "Functional",
+      "coverage_tag": "AC-3",
+      "source_story": "AIP-12"
+    },
+    {
+      "title": "Attempt to modify a message in a past conversation",
+      "preconditions": [
+        "User is viewing a past conversation history"
+      ],
+      "steps": [
+        "Click on an existing message within the history view.",
+        "Attempt to type or delete characters using the keyboard.",
+        "Right-click a message to look for edit or delete options."
+      ],
+      "expected_result": "The message text remains unchanged, no cursor appears for editing, and no modification options are available in the context menu.",
+      "priority": "Medium",
+      "test_type": "Negative",
+      "coverage_tag": "AC-3",
+      "source_story": "AIP-12"
+    },
+    {
+      "title": "Verify empty state message for users with no history",
+      "preconditions": [
+        "User account has zero previous conversations"
+      ],
+      "steps": [
+        "Log in to the application with the empty account.",
+        "Navigate to the conversations section."
+      ],
+      "expected_result": "An empty-state message is displayed on the screen indicating that no previous conversations were found.",
+      "priority": "Medium",
+      "test_type": "Edge Case",
+      "coverage_tag": "AC-5",
+      "source_story": "AIP-12"
+    },
+    {
+      "title": "Verify retention of conversations exactly 90 days old",
+      "preconditions": [
+        "User has a conversation where the last message was sent exactly 90 days ago"
+      ],
+      "steps": [
+        "Log in to the application.",
+        "Navigate to the conversations section.",
+        "Locate the conversation entry with a timestamp from 90 days ago."
+      ],
+      "expected_result": "The conversation is visible and accessible in the list.",
+      "priority": "Medium",
+      "test_type": "Edge Case",
+      "coverage_tag": "AC-4",
+      "source_story": "AIP-12"
+    }
+  ],
+  "notes": "The story does not specify the exact text for the empty-state message or whether the chronological order should be ascending or descending.\n\nINPUT WARNINGS:\n  \u2022 [input-guard:weak_context] Context package has 0 item(s) (minimum 1 for enriched mode to add value). Results may not differ from baseline generation."
+}

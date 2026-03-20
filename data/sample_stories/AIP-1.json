@@ -1,0 +1,206 @@
+{
+  "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+  "id": "10006",
+  "self": "https://tejasworkspace.atlassian.net/rest/api/3/issue/10006",
+  "key": "AIP-1",
+  "fields": {
+    "customfield_10016": null,
+    "summary": "Prevent Storing User Financial Data",
+    "issuetype": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/issuetype/10004",
+      "id": "10004",
+      "description": "A new feature of the product, which has yet to be developed.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10680?size=medium",
+      "name": "New Feature",
+      "subtask": false,
+      "avatarId": 10680,
+      "hierarchyLevel": 0
+    },
+    "components": [],
+    "subtasks": [],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "As a",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " system administrator,"
+            }
+          ],
+          "attrs": {
+            "localId": "7a55a2c09e10"
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "I want",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " the application to automatically detect and discard any financial data entered in the chat,"
+            }
+          ],
+          "attrs": {
+            "localId": "ce68c2d28f44"
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "So that",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " sensitive customer information is never saved in our database or system logs."
+            }
+          ],
+          "attrs": {
+            "localId": "a9e60f66a457"
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Acceptance Criteria:",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "localId": "05db19997842"
+          }
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "attrs": {
+                "localId": "88f5853d90e0"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "The system actively scans chat inputs for patterns like credit card numbers, bank accounts, or routing numbers."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "99af52041c83"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "attrs": {
+                "localId": "f2ca0eb62bec"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "If found, the data is immediately masked (e.g., replaced with "
+                    },
+                    {
+                      "type": "text",
+                      "text": "[REDACTED]",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": ") before the message is processed or stored by the RAG system."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "e379c9df2ddf"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "attrs": {
+                "localId": "972f0d8d6d4d"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "No raw financial data is written to any backend logs or databases."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "4787af69c714"
+                  }
+                }
+              ]
+            }
+          ],
+          "attrs": {
+            "localId": "6144647ff1ec"
+          }
+        }
+      ]
+    },
+    "issuelinks": [],
+    "customfield_10014": null,
+    "status": {
+      "self": "https://tejasworkspace.atlassian.net/rest/api/3/status/1",
+      "description": "The work item is open and ready for the assignee to start work on it.",
+      "iconUrl": "https://tejasworkspace.atlassian.net/images/icons/statuses/open.png",
+      "name": "Open",
+      "id": "1",
+      "statusCategory": {
+        "self": "https://tejasworkspace.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      }
+    },
+    "labels": []
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "doc_id": "AIP-1#story",
+    "source_type": "story",
+    "source_key": "AIP-1",
+    "title": "Prevent Storing User Financial Data",
+    "body": "Prevent Storing User Financial Data | As a system administrator, | The system actively scans chat inputs for patterns like credit card numbers, bank accounts, or routing numbers.",
+    "components": [],
+    "labels": [],
+    "feature_area": null
+  }
+]

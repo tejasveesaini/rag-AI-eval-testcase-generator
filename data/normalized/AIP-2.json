@@ -5,5 +5,36 @@
   "acceptance_criteria": "A brief disclaimer (e.g., \"For your security, please do not share credit card numbers, bank details, or other financial data in this chat.\") appears when the chat window opens.\n\nThe message is highly visible and placed either just above the text input box or as the first automated greeting message.",
   "labels": [],
   "components": [],
-  "linked_issues": []
+  "linked_issues": [
+    {
+      "key": "AIP-10",
+      "issue_type": "Bug",
+      "summary": "Chat input allows forbidden characters"
+    },
+    {
+      "key": "AIP-11",
+      "issue_type": "Bug",
+      "summary": "Chat disclaimer not visible on Safari"
+    },
+    {
+      "key": "AIP-4",
+      "issue_type": "TestCase",
+      "summary": "Verify security disclaimer appears on chat initialization"
+    },
+    {
+      "key": "AIP-5",
+      "issue_type": "TestCase",
+      "summary": "Verify disclaimer text content accuracy"
+    },
+    {
+      "key": "AIP-6",
+      "issue_type": "TestCase",
+      "summary": "Verify disclaimer placement and visibility"
+    },
+    {
+      "key": "AIP-7",
+      "issue_type": "TestCase",
+      "summary": "Verify warning message is not hidden by input focus"
+    }
+  ]
 }

@@ -56,13 +56,20 @@ class FailureCategory(str, Enum):
                                  are template-level boilerplate (too vague to run).
     near_duplicate_generated  – almost identical to another test *within this suite*
                                  (intra-suite duplication).
+    ac_coverage_incomplete    – one or more acceptance criteria have no test case
+                                 whose coverage_tag references them.
+    hallucinated_specific_value – test asserts a concrete value (number, quoted
+                                 string, error code, time) that appears nowhere in
+                                 the story description, AC, or context.
     """
-    MALFORMED_BUT_RELEVANT   = "malformed_but_relevant"
-    GROUNDED_BUT_DUPLICATE   = "grounded_but_duplicate"
-    RELEVANT_BUT_UNSUPPORTED = "relevant_but_unsupported"
-    SHOULD_REFUSE_GENERATED  = "should_refuse_generated"
-    USEFUL_BUT_GENERIC       = "useful_but_generic"
-    NEAR_DUPLICATE_GENERATED = "near_duplicate_generated"
+    MALFORMED_BUT_RELEVANT      = "malformed_but_relevant"
+    GROUNDED_BUT_DUPLICATE      = "grounded_but_duplicate"
+    RELEVANT_BUT_UNSUPPORTED    = "relevant_but_unsupported"
+    SHOULD_REFUSE_GENERATED     = "should_refuse_generated"
+    USEFUL_BUT_GENERIC          = "useful_but_generic"
+    NEAR_DUPLICATE_GENERATED    = "near_duplicate_generated"
+    AC_COVERAGE_INCOMPLETE      = "ac_coverage_incomplete"
+    HALLUCINATED_SPECIFIC_VALUE = "hallucinated_specific_value"
 
 
 # ── Per-case gate result ───────────────────────────────────────────────────────
@@ -356,3 +363,88 @@ class RetrievalDocument(BaseModel):
         default=None,
         description="Free-text feature area tag, e.g. 'chat-widget', 'auth-flow'",
     )
+
+
+# ── H. AC coverage report (new quality check) ─────────────────────────────────
+
+class AcCoverageItem(BaseModel):
+    """Coverage result for one extracted acceptance criterion."""
+    ac_label: str = Field(description="Extracted AC identifier or first words, e.g. 'AC-1'")
+    ac_text: str = Field(description="The raw AC text or first sentence")
+    covered: bool = Field(description="True if at least one test has a matching coverage_tag")
+    covering_tests: list[str] = Field(
+        default_factory=list,
+        description="Titles of tests whose coverage_tag matched this AC",
+    )
+
+
+class AcCoverageReport(BaseModel):
+    """Suite-level AC coverage completeness report."""
+    story_key: str
+    total_ac: int = 0
+    covered_ac: int = 0
+    uncovered_ac: int = 0
+    coverage_ratio: float = 0.0          # covered_ac / total_ac, or 1.0 if no AC found
+    items: list[AcCoverageItem] = Field(default_factory=list)
+    phantom_tags: list[dict] = Field(
+        default_factory=list,
+        description="Tests whose coverage_tag references an AC label not found in the story",
+    )
+    verdict: Verdict = Verdict.PASS
+    summary: str = ""
+
+
+# ── I. Per-test semantic relevancy (new quality check) ────────────────────────
+
+class PerTestRelevancyResult(BaseModel):
+    """LLM-judge relevancy score for one individual test case."""
+    test_index: int
+    title: str
+    score: float
+    passed: bool
+    reason: str = ""
+
+
+class PerTestRelevancyReport(BaseModel):
+    """Suite-level per-test relevancy report."""
+    story_key: str
+    threshold: float
+    results: list[PerTestRelevancyResult] = Field(default_factory=list)
+    pass_count: int = 0
+    fail_count: int = 0
+    avg_score: float = 0.0
+    verdict: Verdict = Verdict.PASS
+    summary: str = ""
+
+
+# ── J. Hallucinated specific values (new quality check) ───────────────────────
+
+class HallucinationFlag(BaseModel):
+    """One detected hallucinated claim in a test case."""
+    test_index: int
+    title: str
+    hallucinated_values: list[str] = Field(
+        description="Numeric literals or quoted strings not found in story/context",
+    )
+    reason: str = ""
+
+
+class HallucinationReport(BaseModel):
+    """Suite-level hallucination report."""
+    story_key: str
+    flags: list[HallucinationFlag] = Field(default_factory=list)
+    clean_count: int = 0
+    flagged_count: int = 0
+    verdict: Verdict = Verdict.PASS
+    summary: str = ""
+
+
+# ── K. Latency metrics ────────────────────────────────────────────────────────
+
+class LatencyMetrics(BaseModel):
+    """Timing data captured during a generation run."""
+    story_key: str
+    generation_seconds: float | None = None
+    evaluation_seconds: float | None = None
+    total_seconds: float | None = None
+    recorded_at: str = ""               # ISO-8601 timestamp

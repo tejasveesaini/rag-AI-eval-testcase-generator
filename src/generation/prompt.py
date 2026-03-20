@@ -57,7 +57,9 @@ HARD RULES — violating any of these makes the output unusable:
   R7. The output must be complete and valid JSON — do not truncate mid-string.
   R8. expected_result must state a directly observable outcome. Never write phrases like
       "as specified", "per requirements", "according to spec", "as required", or
-      "correctly positioned according" — state the actual observable behaviour instead."""
+      "correctly positioned according" — state the actual observable behaviour instead.
+  R9. All double-quote characters that appear inside a string value MUST be escaped as \".
+      Example — WRONG: "The "send" button", CORRECT: "The \"send\" button"."""
 
 
 # ── Context authority rules (only rendered when context is present) ────────────
@@ -125,7 +127,7 @@ def _context_block(package: ContextPackage) -> str:
 
 def build_prompt(
     story: StoryContext,
-    max_tests: int = 10,
+    max_tests: int = 5,
     context: ContextPackage | None = None,
     excluded_titles: list[str] | None = None,
 ) -> str:
@@ -227,7 +229,7 @@ Acceptance Criteria:
 {story.acceptance_criteria or "(not provided)"}
 {labels}{components}{linked}
 
-{context_block_section}{exclusion_section}------------------------------------------------------------
+{exclusion_section}{context_block_section}------------------------------------------------------------
 TASK
 ------------------------------------------------------------
 Generate exactly {max_tests} distinct test cases for the story above.
