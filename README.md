@@ -1,8 +1,7 @@
 # RAG AI Eval Testcase Generator
 
-This **UI + API project** helps **generate and evaluate QA test cases** for **Jira stories** using a **retrieval-augmented workflow** and **AI model**.
+This **UI + API project** that pulls Jira story details, gathers supporting context, generates structured test suites, and evaluates accuracy, hallucination and coverage.
 
-- Pulls Jira story details, gathers supporting context, generates structured test suites, and evaluates their quality.
 - Includes a **browser-based workflow UI** plus supporting scripts for context refresh, test generation, evaluation, and Jira push-back.
 - Works as an **end-to-end test-generation workbench**, not just a story-fetch API.
 
