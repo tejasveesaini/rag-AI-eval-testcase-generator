@@ -1,6 +1,6 @@
-# RAG AI Eval Testcase Generator
+## RAG AI Eval Testcase Generator
 
-This **UI + API project** that pulls Jira story details, gathers supporting context, generates structured test suites, and **(most importantly)** evaluates accuracy, hallucination and coverage.
+:rocket: This **UI + API project** that pulls Jira story details, gathers supporting context, generates structured test suites, and :white_check_mark: **(most importantly)** evaluates accuracy, hallucination and coverage.
 
 - Includes a **browser-based workflow UI** plus supporting scripts for context refresh, test generation, evaluation, and Jira push-back.
 - Works as an **end-to-end test-generation workbench**, not just a story-fetch API.
